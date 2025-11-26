@@ -1,11 +1,15 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../providers/AuthProvider";
+import { HK_ROUTES } from "@/consts/HK_ROUTES";
 
 export function AuthNotRequired() {
-  const { user } = useAuth();
+  const { user, ready } = useAuth();
+  if (!ready) return null;
 
-  if (user && !user.loggedOut && user.accessToken) {
-    return <Navigate to="/cases" replace />;
+  const isLoggedIn = !!user && !user.loggedOut;
+
+  if (isLoggedIn) {
+    return <Navigate to={HK_ROUTES.private.CASES.BASE} replace />;
   }
 
   return <Outlet />;

@@ -1,13 +1,13 @@
 import type { AuthResponse } from "@/api/axios";
 
-export const AUTH_SESSION_STORAGE_KEY = "hk_auth";
-
 export type StoredAuth = AuthResponse & {
   loggedOut: boolean;
 };
 
-export function saveAuthToSession(auth: StoredAuth) {
-  sessionStorage.setItem(AUTH_SESSION_STORAGE_KEY, JSON.stringify(auth));
+export const AUTH_SESSION_STORAGE_KEY = "hk-auth";
+
+export function saveAuthToSession(value: StoredAuth) {
+  sessionStorage.setItem(AUTH_SESSION_STORAGE_KEY, JSON.stringify(value));
 }
 
 export function loadAuthFromSession(): StoredAuth | null {

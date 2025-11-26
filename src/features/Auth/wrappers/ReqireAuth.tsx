@@ -1,8 +1,9 @@
+import type { HKRolesTypes } from "@/consts/HK_ROLES";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../providers/AuthProvider";
 
 type RequireAuthProps = {
-  allowedRoles?: string[];
+  allowedRoles?: HKRolesTypes[];
 };
 
 export function RequireAuth({ allowedRoles }: RequireAuthProps) {

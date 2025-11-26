@@ -28,10 +28,12 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<StoredAuth | null>(null);
+  const [user, setUser] = useState<StoredAuth | null>(() => {
+    const persisted = loadAuthFromSession();
+    return persisted ?? null;
+  });
   const [ready, setReady] = useState(false);
 
-  // bootstrap + try refresh
   useEffect(() => {
     (async () => {
       const persisted = loadAuthFromSession();
