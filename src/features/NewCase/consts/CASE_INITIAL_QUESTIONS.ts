@@ -40,3 +40,45 @@ export const ARTIFACTS = [
   { code: "sequence", label: "Sequence Diagram", icon: "waterfall_chart" },
   { code: "kpi", label: "KPI List", icon: "monitoring" },
 ] as const;
+
+export const INITIAL_ANSWER_LABELS: Record<string, string> = {
+  idea: "Идея / цель проекта",
+  target_users: "Целевая аудитория",
+  problem: "Основные проблемы, которые решает проект",
+  ideal_flow: "Идеальный процесс (как должно быть в идеале)",
+  user_actions: "Действия пользователя в системе",
+  mvp: "MVP — что обязательно в первой версии",
+  constraints: "Ограничения и риски",
+  success_criteria: "Критерии успеха / ключевые метрики",
+};
+
+export const ARTIFACT_META: Record<string, { icon: string; label: string }> = {
+  brd: {
+    icon: "description",
+    label: "BRD — бизнес-требования",
+  },
+  bpmn: {
+    icon: "device_hub",
+    label: "BPMN-диаграмма процесса",
+  },
+  kpi: {
+    icon: "monitoring",
+    label: "KPI / метрики",
+  },
+  use_case: {
+    icon: "account_tree",
+    label: "Use-case сценарии",
+  },
+  frd: {
+    icon: "dataset",
+    label: "FRD — функциональные требования",
+  },
+  user_stories: {
+    icon: "menu_book",
+    label: "User stories",
+  },
+  sequence: {
+    icon: "timeline",
+    label: "Диаграмма последовательности",
+  },
+};

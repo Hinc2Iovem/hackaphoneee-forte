@@ -5,14 +5,52 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useGetCaseDetail } from "../Cases/hooks/useGetCaseDetail";
 import { useGetNextFollowupQuestion } from "../Cases/hooks/useGetNextFollowUpQuestion";
 import { useGetAnswerFollowupQuestion } from "../Cases/hooks/useGetAnswerFollowupQuestion";
+import {
+  ARTIFACT_META,
+  INITIAL_ANSWER_LABELS,
+} from "./consts/CASE_INITIAL_QUESTIONS";
 
 export function FollowupChat() {
   const { caseId } = useParams<{ caseId: string }>();
+  const navigate = useNavigate();
+
   const { data: caseDetail } = useGetCaseDetail(caseId!);
   const { data: nextQuestion, isLoading } = useGetNextFollowupQuestion(caseId!);
   const { mutateAsync, isPending } = useGetAnswerFollowupQuestion(caseId!);
+
   const [answer, setAnswer] = useState("");
-  const navigate = useNavigate();
+
+  const finished = nextQuestion?.is_finished;
+  const currentIndex = (nextQuestion?.order_index ?? 0) + 1;
+  const totalQuestionsFromNext = nextQuestion?.total_questions ?? 0;
+  const totalQuestionsFromDetail =
+    caseDetail?.followup_questions?.length ?? undefined;
+
+  const totalQuestions =
+    totalQuestionsFromDetail ?? totalQuestionsFromNext ?? 0;
+
+  let answeredQuestions = 0;
+
+  if (caseDetail?.followup_questions) {
+    answeredQuestions = caseDetail.followup_questions.filter(
+      (q) => q.status !== "pending" && q.answer_text
+    ).length;
+  } else if (nextQuestion) {
+    if (nextQuestion.is_finished) {
+      answeredQuestions = totalQuestions;
+    } else {
+      if (nextQuestion.order_index)
+        answeredQuestions = nextQuestion.order_index;
+    }
+  }
+
+  let dataSufficiencyPercent =
+    totalQuestions > 0
+      ? Math.round((answeredQuestions / totalQuestions) * 100)
+      : 0;
+
+  if (dataSufficiencyPercent < 0) dataSufficiencyPercent = 0;
+  if (dataSufficiencyPercent > 100) dataSufficiencyPercent = 100;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -26,10 +64,8 @@ export function FollowupChat() {
     setAnswer("");
   }
 
-  const finished = nextQuestion?.is_finished;
-
   return (
-    <div className="flex flex-col lg:flex-row h-full gap-6">
+    <div className="flex h-full w-full flex-col lg:flex-row gap-6">
       <section className="flex-1 flex flex-col bg-white dark:bg-[#2c282f] rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
         <header className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-6 py-3">
           <div>
@@ -74,7 +110,7 @@ export function FollowupChat() {
         {!finished && (
           <form
             onSubmit={handleSubmit}
-            className="border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex flex-col gap-3"
+            className="border-t w-full border-gray-200 dark:border-gray-700 px-6 py-4 flex flex-col gap-3"
           >
             <Textarea
               placeholder="Введите ваш ответ…"
@@ -97,17 +133,23 @@ export function FollowupChat() {
         )}
       </section>
 
-      <aside className="w-full lg:w-[30%] max-w-sm flex flex-col gap-4">
+      <aside className="w-full lg:w-[35%] max-w-sm h-full flex flex-col gap-4">
         <div className="bg-white dark:bg-[#2c282f] rounded-xl p-5 border border-gray-200 dark:border-gray-700">
-          <h2 className="text-sm font-semibold mb-2">Резюме брифа</h2>
+          <h2 className="text-sm font-semibold mb-3">Резюме брифа</h2>
           {caseDetail?.initial_answers ? (
             <ul className="space-y-2 text-xs text-gray-600 dark:text-gray-300">
               {Object.entries(caseDetail.initial_answers).map(
-                ([key, value]) => (
-                  <li key={key}>
-                    <span className="font-semibold">{key}:</span> {value}
-                  </li>
-                )
+                ([key, value]) => {
+                  const label = INITIAL_ANSWER_LABELS[key] ?? key;
+                  return (
+                    <li key={key} className="flex flex-col">
+                      <span className="font-semibold text-[12px] text-gray-700">
+                        {label}:
+                      </span>
+                      <span>{value}</span>
+                    </li>
+                  );
+                }
               )}
             </ul>
           ) : (
@@ -116,24 +158,49 @@ export function FollowupChat() {
             </p>
           )}
         </div>
+
         <div className="bg-white dark:bg-[#2c282f] rounded-xl p-5 border border-gray-200 dark:border-gray-700">
-          <h2 className="text-sm font-semibold mb-2">Выбранные артефакты</h2>
+          <h2 className="text-sm font-semibold mb-3">Выбранные артефакты</h2>
           {caseDetail?.selected_document_types?.length ? (
-            <ul className="space-y-1 text-xs">
-              {caseDetail.selected_document_types.map((t) => (
-                <li key={t} className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary text-sm">
-                    description
-                  </span>
-                  <span>{t}</span>
-                </li>
-              ))}
+            <ul className="space-y-2 text-xs">
+              {caseDetail.selected_document_types.map((code) => {
+                const meta = ARTIFACT_META[code] ?? {
+                  icon: "description",
+                  label: code,
+                };
+                return (
+                  <li key={code} className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-primary text-sm">
+                      {meta.icon}
+                    </span>
+                    <span>{meta.label}</span>
+                  </li>
+                );
+              })}
             </ul>
           ) : (
             <p className="text-xs text-gray-500">
               Артефакты ещё не выбраны (либо сохранение не прошло).
             </p>
           )}
+        </div>
+
+        <div className="bg-white dark:bg-[#2c282f] rounded-xl p-5 border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold">Достаточность данных</h2>
+            <span className="text-sm font-bold text-teal-500">
+              {dataSufficiencyPercent}%
+            </span>
+          </div>
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
+            <div
+              className="h-2.5 rounded-full"
+              style={{
+                width: `${dataSufficiencyPercent}%`,
+                background: "linear-gradient(90deg, #8A2BE2, #00CED1)",
+              }}
+            />
+          </div>
         </div>
       </aside>
     </div>
