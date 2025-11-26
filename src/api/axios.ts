@@ -1,12 +1,21 @@
+import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { AUTH_URL, BASE_URL } from "@/lib/env";
-import axios from "axios";
 
-type AuthResponse = {
-  access: string;
-  refresh?: string | null;
+export type AuthResponse = {
+  accessToken: string;
+  refreshToken: string;
+  email: string;
+  fullName: string;
+  role: string;
+  userId: string;
 };
 
-export const axiosLoginCustomized = axios.create({
+export type AuthTokens = {
+  accessToken: string | null;
+  refreshToken: string | null;
+};
+
+export const axiosAuth = axios.create({
   baseURL: `${AUTH_URL}/api`,
   withCredentials: true,
 });
@@ -16,20 +25,23 @@ export const axiosCustomized = axios.create({
   withCredentials: true,
 });
 
-export const axiosRaw = axios.create({
-  baseURL: `${BASE_URL}/api`,
-  withCredentials: true,
+export const axiosApiRaw = axios.create({
+  baseURL: axiosCustomized.defaults.baseURL,
+  withCredentials: axiosCustomized.defaults.withCredentials,
+  timeout: axiosCustomized.defaults.timeout ?? 30000,
 });
 
 let accessToken: string | null = null;
 let refreshToken: string | null = null;
 let refreshPromise: Promise<string> | null = null;
 
-export function setAuthTokens(
-  tokens: { access?: string; refresh?: string } | null
-) {
-  accessToken = tokens?.access ?? null;
-  refreshToken = tokens?.refresh ?? null;
+export function setAuthTokens(tokens: AuthTokens) {
+  accessToken = tokens.accessToken ?? null;
+  refreshToken = tokens.refreshToken ?? null;
+}
+
+export function getAuthTokens(): AuthTokens {
+  return { accessToken, refreshToken };
 }
 
 export function clearAuthTokens() {
@@ -37,54 +49,51 @@ export function clearAuthTokens() {
   refreshToken = null;
 }
 
-axiosCustomized.interceptors.request.use((config: any) => {
-  if (accessToken && !config._retry) {
-    config.headers = config.headers ?? {};
-    config.headers.Authorization = `Bearer ${accessToken}`;
+axiosCustomized.interceptors.request.use(
+  (config: InternalAxiosRequestConfig & { _retry?: boolean }) => {
+    if (accessToken && !config._retry) {
+      config.headers = config.headers ?? {};
+      config.headers.Authorization = `Bearer ${accessToken}`;
+    }
+    return config;
   }
-  return config;
-});
+);
 
 axiosCustomized.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest: any = error.config;
+  async (error: AxiosError) => {
+    const originalRequest = error.config as
+      | (InternalAxiosRequestConfig & { _retry?: boolean })
+      | undefined;
     const status = error.response?.status;
 
-    console.log("[AXIOS] error", status, originalRequest?.url);
+    if (!originalRequest) return Promise.reject(error);
 
-    if (status !== 401) {
+    const isAuthCall =
+      originalRequest.baseURL?.startsWith(`${AUTH_URL}`) ||
+      originalRequest.url?.startsWith("/auth");
+
+    if (status !== 401 || originalRequest._retry || isAuthCall) {
       return Promise.reject(error);
     }
 
-    if (originalRequest?._retry) {
-      console.log("[AXIOS] already retried -> skip");
-      return Promise.reject(error);
-    }
-
-    if (!refreshToken) {
-      console.log("[AXIOS] no refresh -> skip");
-      return Promise.reject(error);
-    }
+    if (!refreshToken) return Promise.reject(error);
 
     if (!refreshPromise) {
-      console.log("[AXIOS] start refresh");
       refreshPromise = (async () => {
         try {
-          const resp = await axiosRaw.post<AuthResponse>("/auth/refresh/", {
-            refresh: refreshToken,
+          const resp = await axiosAuth.post<AuthResponse>("/auth/refresh", {
+            refreshToken,
           });
 
-          console.log("[AXIOS] refresh OK", resp.data);
+          const newAccess = resp.data.accessToken;
+          const newRefresh = resp.data.refreshToken ?? refreshToken;
 
-          accessToken = resp.data.access;
-          if (resp.data.refresh) {
-            refreshToken = resp.data.refresh;
-          }
+          accessToken = newAccess;
+          refreshToken = newRefresh;
 
-          return accessToken!;
+          return newAccess;
         } catch (e) {
-          console.log("[AXIOS] refresh FAILED", e);
           clearAuthTokens();
           throw e;
         } finally {
@@ -95,7 +104,6 @@ axiosCustomized.interceptors.response.use(
 
     try {
       const newAccess = await refreshPromise;
-
       originalRequest._retry = true;
       originalRequest.headers = originalRequest.headers ?? {};
       originalRequest.headers.Authorization = `Bearer ${newAccess}`;
@@ -105,3 +113,15 @@ axiosCustomized.interceptors.response.use(
     }
   }
 );
+
+axiosAuth.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  const isLoginOrRefresh =
+    config.url?.startsWith("/auth/login") ||
+    config.url?.startsWith("/auth/refresh");
+
+  if (!isLoginOrRefresh && accessToken) {
+    config.headers = config.headers ?? {};
+    config.headers.Authorization = `Bearer ${accessToken}`;
+  }
+  return config;
+});

@@ -1,5 +1,13 @@
 export const HK_ROUTES = {
+  public: {
+    LOGIN: {
+      BASE: "/auth/login",
+    },
+  },
   private: {
+    REGISTER: {
+      BASE: "/auth/admin-register",
+    },
     CASES: {
       BASE: "/cases",
       NEW: "/cases/new",
