@@ -1,20 +1,26 @@
-import type { CaseDetailTypes } from "@/types/CaseTypes";
 import { CaseListTable } from "./components/CaseListTable";
-
-const mockCases: CaseDetailTypes[] = [
-  {
-    id: "mock-1",
-    title: "Анализ оттока клиентов по кредитным картам",
-    requester_name: "Иванов Иван",
-    status: "documents_generated",
-    initial_answers: null,
-    selected_document_types: null,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    followup_questions: [],
-  },
-];
+import CasesEmptyState from "./components/CasesEmptyState";
+import CasesSkeleton from "./components/CasesSkeleton";
+import { useGetCasesList } from "./hooks/useGetCasesList";
 
 export function CasesPage() {
-  return <CaseListTable cases={mockCases} />;
+  const { data, isLoading, isError } = useGetCasesList();
+
+  if (isLoading) {
+    return <CasesSkeleton />;
+  }
+
+  if (isError) {
+    return (
+      <div className="p-4 text-sm text-red-500">
+        Не удалось загрузить кейсы. Попробуйте обновить страницу позже.
+      </div>
+    );
+  }
+
+  if (!data || data.length === 0) {
+    return <CasesEmptyState />;
+  }
+
+  return <CaseListTable cases={data} />;
 }

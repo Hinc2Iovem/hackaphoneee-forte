@@ -37,11 +37,31 @@ export interface CaseSessionTypes {
   updated_at: string;
 }
 
-export interface NextQuestionResponseTypes {
+/** POST /cases/ */
+export interface CaseSessionCreateRequest {
+  title: string;
+  requester_name?: string;
+}
+export type CaseSessionCreateResponse = CaseSessionTypes;
+
+/** PUT /cases/{id}/initial-answers/ */
+export interface CaseInitialAnswersPayload {
+  initial_answers: Record<string, string>;
+  selected_document_types: string[];
+}
+
+/** GET /cases/{id}/next-question/ */
+export interface NextQuestionResponse {
   question_id: string | null;
   order_index: number | null;
   total_questions: number;
   text: string | null;
   target_document_types: string[];
   is_finished: boolean;
+}
+
+/** POST /cases/{id}/answer-question/ */
+export interface AnswerQuestionPayload {
+  question_id: string;
+  answer: string;
 }
