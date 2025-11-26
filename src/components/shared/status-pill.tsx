@@ -3,40 +3,41 @@ import type { CaseStatusVariation } from "@/types/CaseTypes";
 
 const mapStatus: Record<
   CaseStatusVariation,
-  { label: string; color: string; dotColor: string }
+  { label: string; bg: string; dot: string }
 > = {
   draft: {
-    label: "Черновик",
-    color: "bg-gray-200 text-gray-700",
-    dotColor: "bg-gray-600",
+    label: "Новый",
+    bg: "bg-status-new-soft text-status-new",
+    dot: "bg-status-new",
   },
   in_progress: {
     label: "В работе",
-    color: "bg-status-in-progress/10 text-status-in-progress",
-    dotColor: "bg-status-in-progress",
+    bg: "bg-status-in-progress-soft text-status-in-progress",
+    dot: "bg-status-in-progress",
   },
   ready_for_documents: {
-    label: "Готов к генерации документов",
-    color: "bg-status-waiting-ba/10 text-status-waiting-ba",
-    dotColor: "bg-status-waiting-ba",
+    label: "Ждёт ВА",
+    bg: "bg-status-waiting-ba-soft text-status-waiting-ba",
+    dot: "bg-status-waiting-ba",
   },
   documents_generated: {
     label: "Опубликован",
-    color: "bg-status-published/10 text-status-published",
-    dotColor: "bg-status-published",
+    bg: "bg-status-published-soft text-status-published",
+    dot: "bg-status-published",
   },
 };
 
 export function StatusPill({ status }: { status: CaseStatusVariation }) {
   const cfg = mapStatus[status];
+
   return (
     <div
       className={cn(
-        "inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full",
-        cfg.color
+        "inline-flex items-center text-[12px] font-semibold px-[17px] py-[13px] rounded-md",
+        cfg.bg
       )}
     >
-      <span className={cn("w-2 h-2 mr-2 rounded-full", cfg.dotColor)} />
+      <span className={cn("w-2 h-2 mr-2 rounded-full", cfg.dot)} />
       {cfg.label}
     </div>
   );

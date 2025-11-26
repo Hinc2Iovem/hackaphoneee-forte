@@ -1,4 +1,4 @@
-import { BASE_URL } from "@/lib/env";
+import { AUTH_URL, BASE_URL } from "@/lib/env";
 import axios from "axios";
 
 type AuthResponse = {
@@ -6,13 +6,18 @@ type AuthResponse = {
   refresh?: string | null;
 };
 
+export const axiosLoginCustomized = axios.create({
+  baseURL: `${AUTH_URL}/api`,
+  withCredentials: true,
+});
+
 export const axiosCustomized = axios.create({
-  baseURL: `/api`,
+  baseURL: `${BASE_URL}/api`,
   withCredentials: true,
 });
 
 export const axiosRaw = axios.create({
-  baseURL: `/api`,
+  baseURL: `${BASE_URL}/api`,
   withCredentials: true,
 });
 

@@ -6,34 +6,53 @@ export default function CasesSkeleton() {
   const navigate = useNavigate();
 
   return (
-    <div className="mt-6">
-      <div className="flex flex-wrap justify-between items-center gap-4 p-4">
-        <h1 className="text-4xl font-black tracking-[-0.033em]">Мои запросы</h1>
-        <Button onClick={() => navigate(HK_ROUTES.private.CASES.NEW)}>
-          <span className="material-symbols-outlined text-xl!">add_circle</span>
-          <span className="truncate">Создать новый запрос</span>
-        </Button>
-      </div>
-
-      <div className="mt-4 flex flex-col gap-3 px-4">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div
-            key={i}
-            className="grid grid-cols-12 gap-4 items-center bg-card-light dark:bg-white/5
-                       p-6 rounded-xl shadow-sm border border-border-light/60
-                       dark:border-border-dark/60 animate-pulse"
+    <div className="w-full bg-background">
+      <div className="mx-auto max-w-6xl px-4 lg:px-0 py-8">
+        <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
+          <h1 className="text-3xl md:text-4xl font-black tracking-[-0.033em]">
+            Моя доска
+          </h1>
+          <Button
+            onClick={() => navigate(HK_ROUTES.private.CASES.NEW)}
+            className="h-11 rounded-md px-5 md:px-6"
           >
-            <div className="col-span-12 md:col-span-6">
-              <div className="h-4 w-3/4 rounded-full bg-gray-200 dark:bg-white/10" />
-            </div>
-            <div className="col-span-8 md:col-span-3">
-              <div className="h-5 w-24 rounded-full bg-gray-200 dark:bg-white/10" />
-            </div>
-            <div className="col-span-4 md:col-span-3 flex justify-end">
-              <div className="h-4 w-20 rounded-full bg-gray-200 dark:bg-white/10" />
-            </div>
+            <span className="material-symbols-outlined text-xl! mr-2">
+              add_circle
+            </span>
+            <span className="truncate">Создать новый запрос</span>
+          </Button>
+        </div>
+
+        <div className="flex flex-col md:flex-row md:items-center gap-3 mb-4">
+          <div className="flex-1">
+            <div className="h-11 rounded-xl bg-gray-200/70 animate-pulse" />
           </div>
-        ))}
+          <div className="w-44 h-11 rounded-xl bg-gray-200/70 animate-pulse" />
+        </div>
+
+        <div className="flex flex-wrap gap-2 mb-5">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="h-8 w-20 rounded-full bg-gray-200/70 animate-pulse"
+            />
+          ))}
+        </div>
+
+        <div className="flex flex-col gap-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div
+              key={i}
+              className="rounded-2xl bg-card px-5 py-4 shadow-[0_4px_4px_rgba(0,0,0,0.1)]"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_140px] gap-3 items-center">
+                <div className="h-4 w-3/4 rounded-full bg-gray-200/80 animate-pulse" />
+                <div className="h-6 w-28 rounded-full bg-gray-200/80 animate-pulse" />
+                <div className="h-4 w-20 rounded-full bg-gray-200/80 animate-pulse md:ml-auto" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

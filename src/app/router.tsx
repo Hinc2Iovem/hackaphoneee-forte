@@ -4,6 +4,7 @@ import { HK_ROUTES } from "@/consts/HK_ROUTES";
 import { CasesPage } from "@/features/Cases/Cases";
 import { NewCase } from "@/features/NewCase/NewCase";
 import { FollowupChat } from "@/features/NewCase/FollowupChat";
+import { EditCaseInitialStep } from "@/features/NewCase/EditCaseInitialStep";
 
 export function AppRouter() {
   return (
@@ -18,6 +19,10 @@ export function AppRouter() {
         <Route
           path={HK_ROUTES.private.CASES.FOLLOW_UP}
           element={<FollowupChat />}
+        />
+        <Route
+          path={HK_ROUTES.private.CASES.EDIT_INITIAL}
+          element={<EditCaseInitialStep />}
         />
       </Routes>
     </AppLayout>

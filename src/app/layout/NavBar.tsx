@@ -1,6 +1,14 @@
 export function NavBar() {
   return (
-    <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-primary/20 dark:border-primary/30 px-6 sm:px-10 py-3">
+    <header
+      className="
+        sticky top-0 z-20
+        flex items-center justify-between whitespace-nowrap
+        px-6 sm:px-10 py-3
+        bg-card
+        shadow-[0_4px_4px_rgba(0,0,0,0.1)]
+      "
+    >
       <div className="flex items-center gap-3 text-gray-800 dark:text-gray-200">
         <div className="size-6 text-primary">
           <svg

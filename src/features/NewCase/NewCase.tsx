@@ -17,7 +17,7 @@ type CaseDraft = {
 export function NewCase() {
   const [draft, setDraft] = useState<CaseDraft | null>(() => {
     try {
-      const raw = localStorage.getItem(DRAFT_KEY);
+      const raw = sessionStorage.getItem(DRAFT_KEY);
       if (!raw) return null;
       return JSON.parse(raw) as CaseDraft;
     } catch {
@@ -27,10 +27,10 @@ export function NewCase() {
 
   useEffect(() => {
     if (!draft) {
-      localStorage.removeItem(DRAFT_KEY);
+      sessionStorage.removeItem(DRAFT_KEY);
       return;
     }
-    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
   }, [draft]);
 
   function handleSaveLocal(data: {

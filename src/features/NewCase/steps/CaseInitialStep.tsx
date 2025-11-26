@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 import { useCreateCase } from "@/features/Cases/hooks/useCreateCase";
-import { useUpdateCase } from "@/features/Cases/hooks/useUpdateCase";
 import { CASE_INITIAL_QUESTIONS } from "../consts/CASE_INITIAL_QUESTIONS";
 
 export type CaseInitialAnswers = Record<string, string>;
@@ -19,11 +18,9 @@ interface Props {
 
 const SS_KEY = "hk_new_case_step1";
 
-type Step1Store = {
-  caseId?: string;
+type Step1Draft = {
   title?: string;
   answers?: CaseInitialAnswers;
-  backendCase?: unknown;
 };
 
 export function CaseInitialStep({
@@ -31,9 +28,6 @@ export function CaseInitialStep({
   initialAnswers,
   onSaveLocal,
 }: Props) {
-  const { caseId: caseIdFromUrl } = useParams<{ caseId?: string }>();
-
-  const [caseId, setCaseId] = useState<string | null>(caseIdFromUrl ?? null);
   const [title, setTitle] = useState(initialTitle);
   const [answers, setAnswers] = useState<CaseInitialAnswers>(
     initialAnswers ??
@@ -41,22 +35,26 @@ export function CaseInitialStep({
   );
 
   const { mutateAsync: createCase, isPending: isCreating } = useCreateCase();
-  const { mutateAsync: updateCase, isPending: isUpdating } = useUpdateCase();
   const navigate = useNavigate();
 
+  const [hydrated, setHydrated] = useState(false);
+
   useEffect(() => {
-    if (initialAnswers || initialTitle) return;
+    if (initialAnswers || initialTitle) {
+      setHydrated(true);
+      return;
+    }
 
     try {
       const raw = sessionStorage.getItem(SS_KEY);
-      if (!raw) return;
-
-      const parsed = JSON.parse(raw) as Step1Store;
-
-      if (!caseIdFromUrl && parsed.caseId) {
-        setCaseId(parsed.caseId);
+      if (!raw) {
+        setHydrated(true);
+        return;
       }
-      if (!title && parsed.title) {
+
+      const parsed = JSON.parse(raw) as Step1Draft;
+
+      if (parsed.title) {
         setTitle(parsed.title);
       }
       if (parsed.answers) {
@@ -64,13 +62,16 @@ export function CaseInitialStep({
       }
     } catch (e) {
       console.warn("[CaseInitialStep] failed to read sessionStorage", e);
+    } finally {
+      setHydrated(true);
     }
-  }, [initialAnswers, initialTitle, caseIdFromUrl]);
+  }, [initialAnswers, initialTitle]);
 
   useEffect(() => {
+    if (!hydrated) return;
+
     try {
-      const payload: Step1Store = {
-        caseId: caseId ?? undefined,
+      const payload: Step1Draft = {
         title,
         answers,
       };
@@ -78,7 +79,7 @@ export function CaseInitialStep({
     } catch (e) {
       console.warn("[CaseInitialStep] failed to write sessionStorage", e);
     }
-  }, [caseId, title, answers]);
+  }, [hydrated, title, answers]);
 
   function updateField(key: string, value: string) {
     setAnswers((prev) => ({ ...prev, [key]: value }));
@@ -87,8 +88,7 @@ export function CaseInitialStep({
   const allQuestionsFilled = CASE_INITIAL_QUESTIONS.every((f) =>
     (answers[f.key] ?? "").trim()
   );
-  const isMutating = isCreating || isUpdating;
-  const canSubmit = !!title.trim() && allQuestionsFilled && !isMutating;
+  const canSubmit = !!title.trim() && allQuestionsFilled && !isCreating;
 
   async function handleNext() {
     if (!canSubmit) return;
@@ -96,44 +96,11 @@ export function CaseInitialStep({
     const trimmedTitle = title.trim();
     onSaveLocal?.({ title: trimmedTitle, answers });
 
-    const existingId = caseIdFromUrl ?? caseId ?? null;
+    const session = await createCase({ title: trimmedTitle });
 
-    if (existingId) {
-      const updated = await updateCase({
-        id: existingId,
-        data: { title: trimmedTitle },
-      });
+    sessionStorage.removeItem(SS_KEY);
 
-      setCaseId(updated.id);
-
-      sessionStorage.setItem(
-        SS_KEY,
-        JSON.stringify({
-          caseId: updated.id,
-          title: trimmedTitle,
-          answers,
-          backendCase: updated,
-        } as Step1Store)
-      );
-
-      navigate(`/cases/new/${updated.id}/artifacts`);
-    } else {
-      const session = await createCase({ title: trimmedTitle });
-
-      setCaseId(session.id);
-
-      sessionStorage.setItem(
-        SS_KEY,
-        JSON.stringify({
-          caseId: session.id,
-          title: trimmedTitle,
-          answers,
-          backendCase: session,
-        } as Step1Store)
-      );
-
-      navigate(`/cases/new/${session.id}/artifacts`);
-    }
+    navigate(`/cases/new/${session.id}/artifacts`);
   }
 
   return (
