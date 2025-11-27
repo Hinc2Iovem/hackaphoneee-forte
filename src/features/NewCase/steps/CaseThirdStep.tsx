@@ -6,6 +6,7 @@ import { ARTIFACTS, type Artifact } from "../consts/CASE_INITIAL_QUESTIONS";
 import type { CaseInitialAnswers } from "./CaseInitialStep";
 import { useGetCaseDetail } from "@/features/Cases/hooks/useGetCaseDetail";
 import NewCaseHeader from "../components/NewCaseHeader";
+import ArtifactsLoading from "../components/ArtifactsLoading";
 
 interface Props {
   answers: CaseInitialAnswers | undefined;
@@ -33,6 +34,7 @@ export function CaseThirdStep({ answers: answersProp, onFinished }: Props) {
     useState<CaseInitialAnswers | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     try {
@@ -85,17 +87,26 @@ export function CaseThirdStep({ answers: answersProp, onFinished }: Props) {
   async function handleFinish() {
     if (!effectiveAnswers) return;
 
-    await mutateAsync({
-      initial_answers: effectiveAnswers,
-      selected_document_types: selected,
-    });
+    setIsGenerating(true);
+    try {
+      await mutateAsync({
+        initial_answers: effectiveAnswers,
+        selected_document_types: selected,
+      });
 
-    onFinished?.();
-    navigate(`/cases/${caseId}/followup`);
+      onFinished?.();
+      navigate(`/cases/${caseId}/followup`);
+    } finally {
+      setIsGenerating(false);
+    }
   }
 
   if (!effectiveAnswers) {
     return <div className="p-4 text-sm">Загружаем данные кейса…</div>;
+  }
+
+  if (isGenerating || isPending) {
+    return <ArtifactsLoading />;
   }
 
   const artifacts = ARTIFACTS;

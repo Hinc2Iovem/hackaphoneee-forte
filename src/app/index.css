@@ -214,3 +214,41 @@ body {
 .scrollbar-thin:hover::-webkit-scrollbar-thumb {
   background: rgba(148, 163, 184, 1);
 }
+
+/* animation for loading balls */
+.hk-dot-spinner {
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+
+.hk-dot-spinner-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+
+  border-radius: 9999px;
+
+  background-image: linear-gradient(
+    135deg,
+    #ff6a78 0%,
+    #9b053f 69%,
+    #820232 87%
+  );
+
+  animation: hk-dot-pulse 1.1s linear infinite;
+}
+
+@keyframes hk-dot-pulse {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) rotate(var(--dot-angle))
+      translate(0, -34px) scale(0.85);
+    opacity: 0.25;
+  }
+  50% {
+    transform: translate(-50%, -50%) rotate(var(--dot-angle))
+      translate(0, -34px) scale(1.25);
+    opacity: 1;
+  }
+}
