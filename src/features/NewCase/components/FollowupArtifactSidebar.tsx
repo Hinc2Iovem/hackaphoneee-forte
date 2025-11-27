@@ -54,7 +54,7 @@ export default function ArtifactsSidebar({
         )}
       </div>
 
-      <div className="bg-white dark:bg-[#2c282f] rounded-xl p-5 border border-gray-200 dark:border-gray-700">
+      {/* <div className="bg-white dark:bg-[#2c282f] rounded-xl p-5 border border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-semibold">Достаточность данных</h2>
           <span className="text-sm font-bold text-teal-500">
@@ -70,7 +70,7 @@ export default function ArtifactsSidebar({
             }}
           />
         </div>
-      </div>
+      </div> */}
     </>
   );
 }

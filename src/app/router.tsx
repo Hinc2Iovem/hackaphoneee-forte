@@ -13,6 +13,7 @@ import { GeneratedArtifactsListPage } from "@/features/Artifacts/GeneratedArtifa
 import { GeneratedArtifactDetailPage } from "@/features/Artifacts/GeneratedArtifactDetailPage";
 import { BACaseBriefPage } from "@/features/NewCase/steps/BAInitialStep";
 import { AnalyticArtifactsStep } from "@/features/NewCase/steps/BAArtifactsStep";
+import { AnalyticFollowupChat } from "@/features/NewCase/BAFollowupChat";
 
 export function AppRouter() {
   return (
@@ -80,6 +81,11 @@ export function AppRouter() {
             path={HK_ROUTES.private.ARTIFACTS.ANALYTIC.BASE}
             element={<AnalyticArtifactsStep />}
           />
+          <Route
+            path={HK_ROUTES.private.CASES.ANALYTIC.FOLLOW_UP}
+            element={<AnalyticFollowupChat />}
+          />
+
           <Route
             path={HK_ROUTES.private.CASES.CLIENT.FOLLOW_UP}
             element={<FollowupChat />}
