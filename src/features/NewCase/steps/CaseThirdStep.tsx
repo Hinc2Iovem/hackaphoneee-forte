@@ -2,11 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useSaveInitialAnswers } from "@/features/Cases/hooks/useSaveInitialAnswers";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ARTIFACTS, type Artifact } from "../consts/CASE_INITIAL_QUESTIONS";
-import type { CaseInitialAnswers } from "./CaseInitialStep";
 import { useGetCaseDetail } from "@/features/Cases/hooks/useGetCaseDetail";
-import NewCaseHeader from "../components/NewCaseHeader";
-import ArtifactsLoading from "../components/ArtifactsLoading";
 import { HK_ROUTES } from "@/consts/HK_ROUTES";
 import { casesQK } from "@/features/Cases/hooks/casesQueryKeys";
 import { useQueryClient } from "@tanstack/react-query";
@@ -16,6 +12,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import type { CaseInitialAnswers } from "./CaseInitialStep";
+import ArtifactsSpinner from "../components/ArtifactsLoading";
+import { ARTIFACTS, type Artifact } from "../consts/CASE_INITIAL_QUESTIONS";
+import NewCaseHeader from "../components/NewCaseHeader";
 
 interface Props {
   answers: CaseInitialAnswers | undefined;
@@ -119,7 +119,7 @@ export function CaseThirdStep({ answers: answersProp, onFinished }: Props) {
   }
 
   if (isGenerating || isPending) {
-    return <ArtifactsLoading />;
+    return <ArtifactsSpinner />;
   }
 
   const artifacts = ARTIFACTS;
@@ -130,11 +130,18 @@ export function CaseThirdStep({ answers: answersProp, onFinished }: Props) {
     const isActive = selected.includes(a.code);
 
     return (
-      <button
+      <div
         key={a.code}
-        type="button"
+        role="button"
+        tabIndex={0}
         onClick={() => toggle(a.code)}
-        className={`flex h-[120px] flex-col justify-between rounded-2xl border px-4 py-3 text-left shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-colors ${
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            toggle(a.code);
+          }
+        }}
+        className={`flex h-[120px] flex-col justify-between rounded-2xl border px-4 py-3 text-left shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-colors cursor-pointer ${
           isActive
             ? "border-[#A31551] bg-[#FFE6EE]"
             : "border-[#F1EFF4] bg-white hover:border-[#A31551]/50"
@@ -196,7 +203,7 @@ export function CaseThirdStep({ answers: answersProp, onFinished }: Props) {
             )}
           </div>
         </div>
-      </button>
+      </div>
     );
   };
 

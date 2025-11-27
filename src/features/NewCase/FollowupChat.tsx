@@ -54,13 +54,6 @@ export function FollowupChat() {
           stepTitle="Шаг 3 из 3: Уточняющий диалог"
           completionWidth="w-full"
         />
-
-        <div className="space-y-1">
-          <h1 className="text-2xl md:text-3xl font-semibold text-[#1B1B1F]">
-            Анализ кредитного риска для МСБ{" "}
-          </h1>
-          <p className="text-sm text-[#888085]">Уточняющий диалог</p>
-        </div>
       </div>
       <div className="flex w-full flex-col lg:flex-row gap-6 md:min-h-[520px]">
         <ChatPanel
