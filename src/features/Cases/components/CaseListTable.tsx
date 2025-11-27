@@ -186,8 +186,6 @@ export function CaseListTable({ cases }: Props) {
                 role="button"
                 tabIndex={0}
                 onClick={() => {
-                  console.log(c);
-
                   navigate(
                     c.status === "draft"
                       ? HK_ROUTES.private.ARTIFACTS.CLIENT.BASE_VALUE(c.id)

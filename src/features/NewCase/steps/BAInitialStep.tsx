@@ -20,7 +20,7 @@ export function BACaseBriefPage() {
   const goToArtifacts = () => {
     if (!caseId) return;
     navigate(
-      HK_ROUTES.private.ARTIFACTS.ANALYTIC.GENERATED.replace(":caseId", caseId)
+      HK_ROUTES.private.ARTIFACTS.ANALYTIC.BASE.replace(":caseId", caseId)
     );
   };
 

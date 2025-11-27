@@ -11,6 +11,8 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { AppLayout } from "./layout/AppLayout";
 import { GeneratedArtifactsListPage } from "@/features/Artifacts/GeneratedArtifactsListPage";
 import { GeneratedArtifactDetailPage } from "@/features/Artifacts/GeneratedArtifactDetailPage";
+import { BACaseBriefPage } from "@/features/NewCase/steps/BAInitialStep";
+import { AnalyticArtifactsStep } from "@/features/NewCase/steps/BAArtifactsStep";
 
 export function AppRouter() {
   return (
@@ -64,6 +66,31 @@ export function AppRouter() {
           <Route
             path={HK_ROUTES.private.CASES.CLIENT.FOLLOW_UP}
             element={<FollowupChat />}
+          />
+        </Route>
+
+        <Route
+          element={<RequireAuth allowedRoles={["ANALYTIC", "AUTHORITY"]} />}
+        >
+          <Route
+            path={HK_ROUTES.private.CASES.ANALYTIC.INITIAL_STEP}
+            element={<BACaseBriefPage />}
+          />
+          <Route
+            path={HK_ROUTES.private.ARTIFACTS.ANALYTIC.BASE}
+            element={<AnalyticArtifactsStep />}
+          />
+          <Route
+            path={HK_ROUTES.private.CASES.CLIENT.FOLLOW_UP}
+            element={<FollowupChat />}
+          />
+          <Route
+            path={HK_ROUTES.private.ARTIFACTS.CLIENT.GENERATED}
+            element={<GeneratedArtifactsListPage />}
+          />
+          <Route
+            path={HK_ROUTES.private.ARTIFACTS.CLIENT.DETAILED}
+            element={<GeneratedArtifactDetailPage />}
           />
         </Route>
       </Route>

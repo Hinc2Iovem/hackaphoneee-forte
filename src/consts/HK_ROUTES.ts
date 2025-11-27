@@ -22,7 +22,7 @@ export const HK_ROUTES = {
           `/client/cases/${caseId}/edit-initial`,
       },
       ANALYTIC: {
-        NEW: "/analytic/cases/new",
+        INITIAL_STEP: "/analytic/cases/:caseId/initial",
         FOLLOW_UP: "/analytic/cases/:caseId/followup",
         FOLLOW_UP_VALUE: (caseId: string) =>
           `/analytic/cases/${caseId}/followup`,

@@ -168,7 +168,12 @@ export function BACaseListTable({ cases }: Props) {
                 role="button"
                 tabIndex={0}
                 onClick={() =>
-                  navigate(HK_ROUTES.private.CASES.CLIENT.FOLLOW_UP_VALUE(c.id))
+                  navigate(
+                    HK_ROUTES.private.CASES.ANALYTIC.INITIAL_STEP.replace(
+                      ":caseId",
+                      c.id
+                    )
+                  )
                 }
                 className="w-full cursor-pointer text-left rounded-lg bg-card px-6 py-5 shadow-[0_4px_4px_rgba(0,0,0,0.06)] hover:shadow-[0_6px_8px_rgba(0,0,0,0.08)] transition-shadow"
               >

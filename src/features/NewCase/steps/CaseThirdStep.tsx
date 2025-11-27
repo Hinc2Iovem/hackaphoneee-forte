@@ -14,7 +14,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
