@@ -25,8 +25,9 @@ export default function BriefSidebar({
           </button>
         )}
       </div>
+
       {caseDetail?.initial_answers ? (
-        <ul className="space-y-2 text-xs text-gray-600 dark:text-gray-300">
+        <ul className="space-y-2 text-xs text-gray-600 dark:text-gray-300 max-h-64 overflow-y-auto scrollbar-thin px-2">
           {Object.entries(caseDetail.initial_answers).map(([key, value]) => {
             const label = INITIAL_ANSWER_LABELS[key] ?? key;
             return (
@@ -34,7 +35,16 @@ export default function BriefSidebar({
                 <span className="font-semibold text-[12px] text-gray-700">
                   {label}:
                 </span>
-                <span>{value}</span>
+                <span
+                  className="
+                    text-[12px]
+                    text-gray-600 dark:text-gray-300
+                    whitespace-pre-wrap
+                    break-words break-all
+                  "
+                >
+                  {value}
+                </span>
               </li>
             );
           })}

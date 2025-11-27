@@ -7,6 +7,7 @@ import ArtifactsSidebar from "./components/FollowupArtifactSidebar";
 import BriefSidebar from "./components/FollowupBriefSidebar";
 import ChatPanel from "./components/FollowupChatPannel";
 import type { CaseDetailTypes } from "@/types/CaseTypes";
+import NewCaseHeader from "./components/NewCaseHeader";
 
 type AnsweredFollowup = NonNullable<
   NonNullable<CaseDetailTypes>["followup_questions"]
@@ -47,40 +48,55 @@ export function FollowupChat() {
   if (dataSufficiencyPercent > 100) dataSufficiencyPercent = 100;
 
   return (
-    <div className="flex h-full max-h-screen w-full flex-col lg:flex-row gap-6">
-      <ChatPanel
-        caseDetail={caseDetail}
-        isCaseLoading={isCaseLoading}
-        nextQuestion={nextQuestion}
-        isNextLoading={isNextLoading}
-        finished={finished}
-        totalQuestions={totalQuestions}
-        answeredFollowups={answeredFollowups}
-        answeredQuestions={answeredQuestions}
-        isSubmitting={isPending}
-        onSubmitAnswer={async (answer, questionId) => {
-          await mutateAsync({
-            question_id: String(questionId),
-            answer,
-          });
-        }}
-      />
-
-      <aside className="w-full lg:w-[35%] max-w-sm h-full max-h-screen flex flex-col gap-4 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent">
-        <BriefSidebar
-          caseDetail={caseDetail}
-          caseId={caseId}
-          onEditInitial={() =>
-            navigate(HK_ROUTES.private.CASES.EDIT_INITIAL_VALUE(caseId!))
-          }
+    <section className="flex flex-col gap-8">
+      <div className="flex flex-col gap-[40px]">
+        <NewCaseHeader
+          stepTitle="Шаг 3 из 3: Уточняющий диалог"
+          completionWidth="w-full"
         />
 
-        <ArtifactsSidebar
+        <div className="space-y-1">
+          <h1 className="text-2xl md:text-3xl font-semibold text-[#1B1B1F]">
+            Анализ кредитного риска для МСБ{" "}
+          </h1>
+          <p className="text-sm text-[#888085]">Уточняющий диалог</p>
+        </div>
+      </div>
+      <div className="flex h-full max-h-screen w-full flex-col lg:flex-row gap-6">
+        <ChatPanel
           caseDetail={caseDetail}
-          dataSufficiencyPercent={dataSufficiencyPercent}
-          onEditArtifacts={() => navigate(`/cases/new/${caseId}/artifacts`)}
+          isCaseLoading={isCaseLoading}
+          nextQuestion={nextQuestion}
+          isNextLoading={isNextLoading}
+          finished={finished}
+          totalQuestions={totalQuestions}
+          answeredFollowups={answeredFollowups}
+          answeredQuestions={answeredQuestions}
+          isSubmitting={isPending}
+          onSubmitAnswer={async (answer, questionId) => {
+            await mutateAsync({
+              question_id: String(questionId),
+              answer,
+            });
+          }}
         />
-      </aside>
-    </div>
+
+        <aside className="w-full lg:w-[35%] max-w-sm h-full max-h-screen flex flex-col gap-4 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent">
+          <BriefSidebar
+            caseDetail={caseDetail}
+            caseId={caseId}
+            onEditInitial={() =>
+              navigate(HK_ROUTES.private.CASES.EDIT_INITIAL_VALUE(caseId!))
+            }
+          />
+
+          <ArtifactsSidebar
+            caseDetail={caseDetail}
+            dataSufficiencyPercent={dataSufficiencyPercent}
+            onEditArtifacts={() => navigate(`/cases/new/${caseId}/artifacts`)}
+          />
+        </aside>
+      </div>
+    </section>
   );
 }

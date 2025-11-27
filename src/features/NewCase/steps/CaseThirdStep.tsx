@@ -2,14 +2,20 @@ import { Button } from "@/components/ui/button";
 import { useSaveInitialAnswers } from "@/features/Cases/hooks/useSaveInitialAnswers";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ARTIFACTS } from "../consts/CASE_INITIAL_QUESTIONS";
+import { ARTIFACTS, type Artifact } from "../consts/CASE_INITIAL_QUESTIONS";
 import type { CaseInitialAnswers } from "./CaseInitialStep";
 import { useGetCaseDetail } from "@/features/Cases/hooks/useGetCaseDetail";
+import NewCaseHeader from "../components/NewCaseHeader";
 
 interface Props {
   answers: CaseInitialAnswers | undefined;
   onFinished?: () => void;
 }
+
+type Step2Draft = {
+  answers?: CaseInitialAnswers;
+  selected?: string[];
+};
 
 export function CaseThirdStep({ answers: answersProp, onFinished }: Props) {
   const { caseId } = useParams<{ caseId: string }>();
@@ -23,53 +29,52 @@ export function CaseThirdStep({ answers: answersProp, onFinished }: Props) {
     ? `hk_new_case_step2_${caseId}`
     : "hk_new_case_step2";
 
-  const effectiveAnswers: CaseInitialAnswers | null =
-    answersProp ??
-    caseDetail?.initial_answers ??
-    (() => {
-      try {
-        const raw = sessionStorage.getItem(storageKey);
-        if (!raw) return null;
-        const parsed = JSON.parse(raw) as {
-          answers?: CaseInitialAnswers;
-        };
-        return parsed.answers ?? null;
-      } catch {
-        return null;
-      }
-    })();
+  const [effectiveAnswers, setEffectiveAnswers] =
+    useState<CaseInitialAnswers | null>(null);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [hydrated, setHydrated] = useState(false);
 
-  const [selected, setSelected] = useState<string[]>(() => {
+  useEffect(() => {
     try {
       const raw = sessionStorage.getItem(storageKey);
-      if (!raw) return [];
-      const parsed = JSON.parse(raw) as { selected?: string[] };
-      return parsed.selected ?? [];
-    } catch {
-      return [];
+      const draft: Step2Draft = raw ? JSON.parse(raw) : {};
+
+      const answersFromServer =
+        answersProp ?? caseDetail?.initial_answers ?? null;
+
+      const answers = answersFromServer ?? draft.answers ?? null;
+      const selectedFromDraft =
+        draft.selected ?? caseDetail?.selected_document_types ?? [];
+
+      if (answers) setEffectiveAnswers(answers);
+      if (selectedFromDraft && selectedFromDraft.length > 0) {
+        setSelected(selectedFromDraft);
+      }
+    } catch (e) {
+      console.warn("[CaseThirdStep] failed to read sessionStorage", e);
+    } finally {
+      setHydrated(true);
     }
-  });
+  }, [
+    storageKey,
+    answersProp,
+    caseDetail?.initial_answers,
+    caseDetail?.selected_document_types,
+  ]);
 
   useEffect(() => {
-    if (caseDetail?.selected_document_types?.length && selected.length === 0) {
-      setSelected(caseDetail.selected_document_types);
-    }
-  }, [caseDetail?.selected_document_types, selected.length]);
+    if (!hydrated) return;
 
-  useEffect(() => {
     try {
-      if (!effectiveAnswers) return;
-      sessionStorage.setItem(
-        storageKey,
-        JSON.stringify({
-          answers: effectiveAnswers,
-          selected,
-        })
-      );
+      const payload: Step2Draft = {
+        answers: effectiveAnswers ?? undefined,
+        selected,
+      };
+      sessionStorage.setItem(storageKey, JSON.stringify(payload));
     } catch (e) {
       console.warn("[CaseThirdStep] failed to write sessionStorage", e);
     }
-  }, [effectiveAnswers, selected, storageKey]);
+  }, [hydrated, effectiveAnswers, selected, storageKey]);
 
   function toggle(code: string) {
     setSelected((prev) =>
@@ -93,73 +98,118 @@ export function CaseThirdStep({ answers: answersProp, onFinished }: Props) {
     return <div className="p-4 text-sm">Загружаем данные кейса…</div>;
   }
 
-  return (
-    <div className="flex flex-col gap-6 pb-32">
-      <div className="flex flex-col gap-2">
-        <p className="text-sm text-gray-500">Шаг 2 из 3: Выбор артефактов</p>
-        <h1 className="text-3xl font-black tracking-tight">
-          Выберите артефакты для генерации
-        </h1>
-        <p className="text-sm text-gray-600">
-          Укажите, какие документы и диаграммы должен подготовить AI-ассистент.
-        </p>
-      </div>
+  const artifacts = ARTIFACTS;
+  const documentArtifacts = artifacts.filter((a) => a.group !== "diagram");
+  const diagramArtifacts = artifacts.filter((a) => a.group === "diagram");
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {ARTIFACTS.map((a) => {
-          const isActive = selected.includes(a.code);
-          return (
-            <button
-              key={a.code}
-              type="button"
-              onClick={() => toggle(a.code)}
-              className={`flex flex-col gap-4 p-5 h-full rounded-xl border-2 shadow-sm transition-all text-left ${
-                isActive
-                  ? "border-accent bg-card-light/90 dark:bg-card-dark"
-                  : "border-transparent bg-card-light dark:bg-card-dark hover:border-accent/50"
+  const renderArtifactCard = (a: Artifact) => {
+    const isActive = selected.includes(a.code);
+
+    return (
+      <button
+        key={a.code}
+        type="button"
+        onClick={() => toggle(a.code)}
+        className={`flex h-[120px] flex-col justify-between rounded-2xl border px-4 py-3 text-left shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-colors ${
+          isActive
+            ? "border-[#A31551] bg-[#FFE6EE]"
+            : "border-[#F1EFF4] bg-white hover:border-[#A31551]/50"
+        }`}
+      >
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-start gap-2">
+            <div
+              className={`mt-[2px] flex h-7 w-7 items-center justify-center rounded-md ${
+                isActive ? "bg-[#A31551]" : "bg-[#F1EFF4]"
               }`}
             >
-              <div className="flex justify-between items-start">
-                <div className="p-3 bg-primary/10 rounded-lg text-primary">
-                  <span className="material-symbols-outlined text-3xl!">
-                    {a.icon}
-                  </span>
-                </div>
-                <div
-                  className={`w-6 h-6 rounded-md border-2 flex items-center justify-center ${
-                    isActive
-                      ? "bg-primary border-primary text-white"
-                      : "border-gray-300"
-                  }`}
-                >
-                  {isActive && (
-                    <span className="material-symbols-outlined text-base!">
-                      check
-                    </span>
-                  )}
-                </div>
-              </div>
-              <p className="text-base font-bold">{a.label}</p>
-            </button>
-          );
-        })}
+              <span
+                className={`material-symbols-outlined text-[18px] leading-none ${
+                  isActive ? "text-white" : "text-[#A31551]"
+                }`}
+              >
+                {a.icon}
+              </span>
+            </div>
+            <p className="text-sm font-semibold text-[#1B1B1F] leading-snug">
+              {a.label}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            title={a.description}
+            className="inline-flex size-5 items-center justify-center rounded-full border border-[#E3E1E8] bg-white text-[11px] text-[#888085]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            ?
+          </button>
+        </div>
+
+        <div className="flex justify-end">
+          <div
+            className={`flex size-6 items-center justify-center rounded-md border-2 ${
+              isActive
+                ? "border-[#A31551] bg-[#A31551] text-white"
+                : "border-[#E3E1E8] bg-white"
+            }`}
+          >
+            {isActive && (
+              <span className="material-symbols-outlined text-[18px] leading-none">
+                check
+              </span>
+            )}
+          </div>
+        </div>
+      </button>
+    );
+  };
+
+  return (
+    <div className="min-h-[calc(100vh-64px)] bg-[#F7F6F8]">
+      <div className="mx-auto w-full max-w-6xl px-4 py-6 pb-32 space-y-10">
+        <NewCaseHeader
+          stepTitle="Шаг 2 из 3: Выбор артефактов"
+          completionWidth="w-2/3"
+        />
+
+        <div className="space-y-1">
+          <h1 className="text-2xl md:text-3xl font-semibold text-[#1B1B1F]">
+            Выберите артефакты для генерации
+          </h1>
+          <p className="text-sm text-[#888085]">
+            Укажите, какие документы и диаграммы должен подготовить ИИ-ассистент
+            на основе вашего запроса.
+          </p>
+        </div>
+
+        <section className="space-y-4">
+          <h2 className="text-base font-semibold text-[#1B1B1F]">Документы</h2>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {documentArtifacts.map(renderArtifactCard)}
+          </div>
+        </section>
+
+        <section className="space-y-4">
+          <h2 className="text-base font-semibold text-[#1B1B1F]">Диаграммы</h2>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {diagramArtifacts.map(renderArtifactCard)}
+          </div>
+        </section>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 border-t border-border-light bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm">
-        <div className="mx-auto max-w-5xl flex justify-between px-4 py-4 gap-3">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => navigate(-1)}
-          >
-            Назад
-          </Button>
+      <div className="sticky bottom-0 left-0 right-0 border-t border-[#E3E1E8] bg-[#F7F6F8]/95 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-6xl items-center justify-end gap-4 px-4 py-4">
           <Button
             type="button"
             onClick={handleFinish}
             disabled={!selected.length || isPending}
+            className="flex h-11 items-center justify-center gap-2 rounded-lg bg-[#A31551] px-8 text-sm font-semibold text-white hover:bg-[#8F1246] disabled:opacity-60"
           >
-            Сохранить и перейти к уточняющим вопросам
+            <span>Далее</span>
+            <span className="material-symbols-outlined text-xl">
+              arrow_forward
+            </span>
           </Button>
         </div>
       </div>

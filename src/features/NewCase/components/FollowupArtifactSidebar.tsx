@@ -31,9 +31,9 @@ export default function ArtifactsSidebar({
         </div>
 
         {caseDetail?.selected_document_types?.length ? (
-          <ul className="space-y-2 text-xs">
+          <ul className="space-y-2 text-xs px-2">
             {caseDetail.selected_document_types.map((code) => {
-              const meta = ARTIFACT_META[code] ?? {
+              const meta = ARTIFACT_META[code as "vision_problem"] ?? {
                 icon: "description",
                 label: code,
               };

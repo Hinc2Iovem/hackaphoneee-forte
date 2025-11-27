@@ -7,6 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { useCreateCase } from "@/features/Cases/hooks/useCreateCase";
 import { CASE_INITIAL_QUESTIONS } from "../consts/CASE_INITIAL_QUESTIONS";
+import { HK_ROUTES } from "@/consts/HK_ROUTES";
+import NewCaseHeader from "../components/NewCaseHeader";
 
 export type CaseInitialAnswers = Record<string, string>;
 
@@ -54,9 +56,7 @@ export function CaseInitialStep({
 
       const parsed = JSON.parse(raw) as Step1Draft;
 
-      if (parsed.title) {
-        setTitle(parsed.title);
-      }
+      if (parsed.title) setTitle(parsed.title);
       if (parsed.answers) {
         setAnswers((prev) => ({ ...prev, ...parsed.answers }));
       }
@@ -71,10 +71,7 @@ export function CaseInitialStep({
     if (!hydrated) return;
 
     try {
-      const payload: Step1Draft = {
-        title,
-        answers,
-      };
+      const payload: Step1Draft = { title, answers };
       sessionStorage.setItem(SS_KEY, JSON.stringify(payload));
     } catch (e) {
       console.warn("[CaseInitialStep] failed to write sessionStorage", e);
@@ -104,74 +101,66 @@ export function CaseInitialStep({
   }
 
   return (
-    <div className="space-y-8 pb-32">
-      <div className="mb-8 space-y-4">
-        <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
-          <span className="text-primary hover:underline">Создание запроса</span>
-          <span className="text-gray-400">/</span>
-          <span className="text-text-light dark:text-text-dark">
-            Шаг 1: Основная информация
-          </span>
-        </div>
+    <div className="min-h-[calc(100vh-64px)] bg-[#F7F6F8]">
+      <div className="mx-auto w-full max-w-6xl px-4 py-6 pb-32 space-y-8">
+        <NewCaseHeader
+          stepTitle="Шаг 1 из 3: Основная информация"
+          completionWidth="w-1/3"
+        />
 
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-4xl font-black tracking-tight text-text-light dark:text-text-dark">
-            Создание нового запроса
+        <div className="mt-12 space-y-3">
+          <h1 className="text-2xl md:text-3xl font-semibold text-[#1B1B1F]">
+            Название бизнес - проекта
           </h1>
+          <div className="rounded-xl bg-[#F1EFF4] px-4 py-3">
+            <Input
+              placeholder="Например: Запуск кредитной карты для молодёжи"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="h-10 w-full border-0 bg-transparent px-0 text-sm md:text-base text-[#1B1B1F] placeholder:text-[#B0A9B5] focus-visible:outline-none focus-visible:ring-0"
+            />
+          </div>
         </div>
-      </div>
 
-      <div>
-        <label className="flex flex-col">
-          <p className="pb-2 text-base font-medium text-text-light dark:text-text-dark">
-            Название бизнес-проекта
-          </p>
-          <Input
-            placeholder="Например, Запуск новой кредитной карты для молодежи"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="h-12 w-full max-w-2xl rounded-lg border border-border-light bg-card-light p-4 text-base font-normal text-text-light placeholder:text-gray-400 focus:border-primary focus:outline-0 focus:ring-2 focus:ring-primary/30 dark:border-border-dark dark:bg-card-dark dark:text-text-dark dark:placeholder:text-gray-500"
-          />
-        </label>
-      </div>
+        <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4 ">
+          {CASE_INITIAL_QUESTIONS.map((field) => (
+            <div
+              key={field.key}
+              className="flex h-80 flex-col rounded-2xl border border-[#F1EFF4] bg-white p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
+            >
+              <div className="mb-3 min-h-10 flex items-start">
+                <p className="text-sm font-semibold text-[#1B1B1F] leading-snug">
+                  {field.label}
+                </p>
+              </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {CASE_INITIAL_QUESTIONS.map((field) => (
-          <div
-            key={field.key}
-            className="flex flex-col rounded-xl border border-border-light bg-card-light p-5 shadow-sm transition-shadow hover:shadow-md dark:border-border-dark dark:bg-card-dark"
-          >
-            <label className="flex h-full flex-col">
-              <p className="pb-2 text-base font-semibold text-text-light dark:text-text-dark">
-                {field.label}
-              </p>
               <Textarea
                 placeholder="Введите ответ"
                 value={answers[field.key] ?? ""}
                 onChange={(e) => updateField(field.key, e.target.value)}
-                className="grow w-full resize-none rounded-lg border border-border-light bg-background-light p-3 text-sm text-text-light placeholder:text-gray-400 focus:border-primary focus:outline-0 focus:ring-2 focus:ring-primary/30 dark:border-border-dark dark:bg-background-dark dark:text-text-dark dark:placeholder:text-gray-500"
+                className="flex-1 w-full scrollbar-thin resize-none rounded-xl border border-[#E3E1E8] bg-[#F7F6F8] p-3 text-sm text-[#1B1B1F] placeholder:text-[#B0A9B5] focus-visible:border-[#A31551] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A31551]/30"
               />
-            </label>
-          </div>
-        ))}
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 border-t border-border-light bg-background-light/80 dark:border-border-dark dark:bg-background-dark/80 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-end gap-4 px-4 py-4 sm:px-6 lg:px-8">
+      <div className="sticky bottom-0 left-0 right-0 border-t border-[#E3E1E8] bg-[#F7F6F8]/95 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-6xl items-center justify-end gap-4 px-4 py-4">
           <Button
             type="button"
-            variant="secondary"
-            onClick={() => navigate(-1)}
-            className="bg-secondary-button-light text-text-light hover:bg-gray-300 dark:bg-secondary-button-dark dark:text-text-dark dark:hover:bg-opacity-80"
+            variant="outline"
+            onClick={() => navigate(HK_ROUTES.private.CASES.BASE)}
+            className="h-11 rounded-lg border border-[#E3E1E8] bg-white px-6 text-sm font-medium text-[#1B1B1F] hover:bg-[#F1EFF4]"
           >
-            Назад
+            Отменить
           </Button>
 
           <Button
             type="button"
             onClick={handleNext}
             disabled={!canSubmit}
-            className="flex h-11 items-center justify-center gap-2 rounded-lg bg-primary px-6 text-base font-semibold text-white transition-colors hover:bg-opacity-90"
+            className="flex h-11 items-center justify-center gap-2 rounded-lg bg-[#A31551] px-8 text-sm font-semibold text-white hover:bg-[#8F1246] disabled:opacity-60"
           >
             <span>Далее</span>
             <span className="material-symbols-outlined text-xl">

@@ -61,15 +61,6 @@ export function EditCaseInitialStep() {
   return (
     <div className="space-y-8 pb-32">
       <div className="mb-8 space-y-2">
-        <button
-          type="button"
-          className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700"
-          onClick={() => navigate(-1)}
-        >
-          <span className="material-symbols-outlined text-sm">arrow_back</span>
-          Назад к уточняющим вопросам
-        </button>
-
         <h1 className="text-3xl font-black tracking-tight">
           Редактирование брифа
         </h1>
