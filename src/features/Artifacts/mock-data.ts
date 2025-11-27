@@ -1,6 +1,10 @@
 import type { CaseDetailTypes } from "@/types/CaseTypes";
 
 export type ArtifactGenerationStatus = "accepted" | "rejected" | "pending";
+export type DocumentStatusVariation =
+  | "approved_by_ba"
+  | "rejected_by_ba"
+  | "draft";
 
 export interface GeneratedArtifact {
   id: string;

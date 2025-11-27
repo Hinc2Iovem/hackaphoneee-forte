@@ -215,40 +215,78 @@ body {
   background: rgba(148, 163, 184, 1);
 }
 
-/* animation for loading balls */
 .hk-dot-spinner {
   position: relative;
-  width: 80px;
-  height: 80px;
+  width: 120px;
+  height: 120px;
 }
 
 .hk-dot-spinner-dot {
   position: absolute;
   top: 50%;
   left: 50%;
-
   border-radius: 9999px;
-
-  background-image: linear-gradient(
-    135deg,
+  background: radial-gradient(
+    circle at 30% 30%,
     #ff6a78 0%,
     #9b053f 69%,
     #820232 87%
   );
-
-  animation: hk-dot-pulse 1.1s linear infinite;
+  transform: translate(-50%, -50%) rotate(var(--dot-angle)) translate(0, -34px);
+  opacity: 0.25;
+  animation: hk-dot-pulse 1.8s ease-in-out infinite;
 }
 
 @keyframes hk-dot-pulse {
   0%,
   100% {
     transform: translate(-50%, -50%) rotate(var(--dot-angle))
-      translate(0, -34px) scale(0.85);
+      translate(0, -34px) scale(0.7);
     opacity: 0.25;
   }
   50% {
     transform: translate(-50%, -50%) rotate(var(--dot-angle))
-      translate(0, -34px) scale(1.25);
+      translate(0, -34px) scale(1.4);
     opacity: 1;
   }
 }
+
+/* toasts */
+@layer components {
+  .hk-toast {
+    @apply flex items-start gap-3 rounded-[var(--radius)] border px-4 py-3 shadow-card;
+    background-color: var(--surface-strong);
+    color: var(--foreground);
+  }
+
+  .hk-toast-success {
+    background-color: var(--status-published-soft);
+    border-color: var(--status-published);
+  }
+
+  .hk-toast-error {
+    background-color: var(--status-waiting-ba-soft);
+    border-color: var(--status-waiting-ba);
+  }
+
+  .hk-toast-warning {
+    background-color: var(--status-in-progress-soft);
+    border-color: var(--status-in-progress);
+  }
+
+  .hk-toast-info {
+    background-color: var(--status-new-soft);
+    border-color: var(--status-new);
+  }
+
+  .hk-toast .sonner-title {
+    font-weight: 600;
+    color: var(--foreground);
+  }
+
+  .hk-toast .sonner-description {
+    font-size: 12px;
+    color: var(--muted-foreground);
+  }
+}
+/* toasts */

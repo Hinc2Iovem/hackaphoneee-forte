@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toastError, toastSuccess } from "@/components/shared/toasts";
 
 type RegisterPayload = {
   email: string;
@@ -29,7 +30,6 @@ export function AdminRegisterPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   const passwordsMatch = form.password && form.password === confirm;
 
@@ -43,21 +43,31 @@ export function AdminRegisterPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    setSuccess(null);
 
     if (!passwordsMatch) {
-      setError("Пароли не совпадают");
+      const message = "Пароли не совпадают";
+      setError(message);
+
+      toastError("Проверьте пароли", {
+        description: message,
+      });
+
       return;
     }
 
     setSubmitting(true);
     try {
       await axiosAuth.post("/admin/register", form);
-      setSuccess("Пользователь успешно создан");
+
+      toastSuccess("Пользователь успешно создан");
+
       setForm({ email: "", fullName: "", password: "", role: "CLIENT" });
       setConfirm("");
     } catch {
-      setError("Не удалось создать пользователя");
+      const message = "Не удалось создать пользователя";
+      setError(message);
+
+      toastError("Ошибка при создании пользователя");
     } finally {
       setSubmitting(false);
     }
@@ -151,7 +161,6 @@ export function AdminRegisterPage() {
         </div>
 
         {error && <p className="text-xs text-red-500">{error}</p>}
-        {success && <p className="text-xs text-green-600">{success}</p>}
 
         <Button
           type="submit"

@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "./providers/AuthProvider";
+import { toastError, toastSuccess } from "@/components/shared/toasts";
 
 export function LoginPage() {
   const { login } = useAuth();
@@ -21,9 +22,13 @@ export function LoginPage() {
     setSubmitting(true);
     try {
       await login({ email, password });
+      toastSuccess("Вы успешно вошли в систему");
       navigate(from, { replace: true });
     } catch (e) {
-      setError("Неверный логин или пароль");
+      const message = "Неверный логин или пароль";
+      setError(message);
+
+      toastError("Не удалось войти");
     } finally {
       setSubmitting(false);
     }
