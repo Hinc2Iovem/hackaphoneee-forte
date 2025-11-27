@@ -8,6 +8,8 @@ import {
 import type { DocumentStatusVariation } from "@/features/Artifacts/mock-data";
 import ArtifactsSpinner from "@/features/NewCase/components/ArtifactsLoading";
 import { HK_ROUTES } from "@/consts/HK_ROUTES";
+import { toastError, toastSuccess } from "@/components/shared/toasts";
+import useReviewDocument from "@/features/Cases/hooks/useReviewDocument";
 
 type GeneratedDocumentFile = EnsureDocumentsResponse["files"][number];
 
@@ -49,15 +51,40 @@ export function GeneratedArtifactDetailPage() {
   }>();
 
   const { data: caseDetail } = useGetCaseDetail(caseId);
-  const { data, isLoading, isError } = useEnsureCaseDocuments(caseId);
+  const { data, isLoading, isError, refetch } = useEnsureCaseDocuments(caseId);
 
   const artifacts = data?.files ?? [];
   const selected: GeneratedDocumentFile | undefined =
     artifacts.find((a) => a.id === artifactId) ?? artifacts[0];
 
+  const reviewMutation = useReviewDocument(selected?.id);
+
   const handleSelectFromSidebar = (id: string) => {
     if (!caseId) return;
     navigate(HK_ROUTES.private.ARTIFACTS.CLIENT.DETAILED_VALUE(caseId, id));
+  };
+
+  const handleAfterMutation = async () => {
+    await refetch();
+  };
+
+  const handleReview = async (status: DocumentStatusVariation) => {
+    if (!selected?.id) return;
+
+    try {
+      await reviewMutation.mutateAsync(status);
+      toastSuccess(
+        status === "approved_by_ba"
+          ? "Документ принят"
+          : status === "rejected_by_ba"
+          ? "Документ отклонён"
+          : "Статус документа обновлён"
+      );
+      await handleAfterMutation();
+    } catch (e) {
+      console.error(e);
+      toastError("Не удалось обновить статус документа");
+    }
   };
 
   if (isLoading) {
@@ -98,6 +125,9 @@ export function GeneratedArtifactDetailPage() {
     );
   }
 
+  const hasDocx = !!selected.docx_url;
+  const hasDiagram = !!selected.diagram_url;
+
   return (
     <div className="min-h-[calc(100vh-64px)] bg-[#F7F6F8]">
       <div className="mx-auto w-full max-w-6xl px-4 py-6 space-y-6">
@@ -120,7 +150,7 @@ export function GeneratedArtifactDetailPage() {
           <h1 className="text-xl md:text-2xl font-semibold text-[#1B1B1F]">
             {caseDetail?.title ?? data?.case_title ?? "Кейс"}
           </h1>
-          <p className="text-xs text-[#888085]">Редактирование артефактов</p>
+          <p className="text-xs text-[#888085]">Просмотр артефактов</p>
         </div>
 
         <div className="grid gap-6 md:grid-cols-[260px,minmax(0,1fr),160px]">
@@ -164,39 +194,80 @@ export function GeneratedArtifactDetailPage() {
               </div>
             </header>
 
-            <div className="flex-1 flex flex-col items-center justify-center rounded-xl border border-[#E3E1E8] bg-[#F7F6F8] px-4 py-6 text-center">
-              <p className="text-sm text-[#55505A]">
-                Предпросмотр DOCX в браузере недоступен.
-              </p>
-              <p className="mt-1 text-xs text-[#888085]">
-                Скачайте файл, чтобы открыть его в Word, Google Docs или другом
-                редакторе документов.
-              </p>
-            </div>
+            {hasDiagram && !hasDocx ? (
+              <div className="flex-1 flex items-center justify-center rounded-xl border border-[#E3E1E8] bg-[#F7F6F8] px-4 py-6">
+                <img
+                  src={selected.diagram_url!}
+                  alt={selected.title}
+                  className="max-h-[520px] w-full rounded-lg bg-white object-contain"
+                />
+              </div>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center rounded-xl border border-[#E3E1E8] bg-[#F7F6F8] px-4 py-6 text-center">
+                <p className="text-sm text-[#55505A]">
+                  Предпросмотр DOCX в браузере недоступен.
+                </p>
+                <p className="mt-1 text-xs text-[#888085]">
+                  Скачайте файл, чтобы открыть его в Word, Google Docs или
+                  другом редакторе документов.
+                </p>
+              </div>
+            )}
 
             <div className="mt-4 flex flex-wrap items-center gap-3">
-              <a
-                href={selected.docx_url}
-                download
-                className="inline-flex cursor-pointer items-center justify-center rounded-lg bg-[#A31551] px-4 py-2 text-xs font-semibold text-white hover:bg-[#8F1246]"
-              >
-                <span className="material-symbols-outlined mr-1 text-sm">
-                  download
-                </span>
-                <span>Скачать DOCX</span>
-              </a>
+              {hasDocx && (
+                <>
+                  <a
+                    href={selected.docx_url!}
+                    download
+                    className="inline-flex cursor-pointer items-center justify-center rounded-lg bg-[#A31551] px-4 py-2 text-xs font-semibold text-white hover:bg-[#8F1246]"
+                  >
+                    <span className="material-symbols-outlined mr-1 text-sm">
+                      download
+                    </span>
+                    <span>Скачать DOCX</span>
+                  </a>
 
-              <a
-                href={selected.docx_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-[#E3E1E8] bg-white px-3 py-2 text-xs font-medium text-[#55505A] hover:bg-[#F7F6F8]"
-              >
-                <span className="material-symbols-outlined mr-1 text-sm">
-                  open_in_new
-                </span>
-                <span>Открыть в новой вкладке</span>
-              </a>
+                  <a
+                    href={selected.docx_url!}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-[#E3E1E8] bg-white px-3 py-2 text-xs font-medium text-[#55505A] hover:bg-[#F7F6F8]"
+                  >
+                    <span className="material-symbols-outlined mr-1 text-sm">
+                      open_in_new
+                    </span>
+                    <span>Открыть в новой вкладке</span>
+                  </a>
+                </>
+              )}
+
+              {hasDiagram && (
+                <>
+                  <a
+                    href={selected.diagram_url!}
+                    download
+                    className="inline-flex cursor-pointer items-center justify-center rounded-lg bg-[#A31551] px-4 py-2 text-xs font-semibold text-white hover:bg-[#8F1246]"
+                  >
+                    <span className="material-symbols-outlined mr-1 text-sm">
+                      download
+                    </span>
+                    <span>Скачать диаграмму</span>
+                  </a>
+
+                  <a
+                    href={selected.diagram_url!}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-[#E3E1E8] bg-white px-3 py-2 text-xs font-medium text-[#55505A] hover:bg-[#F7F6F8]"
+                  >
+                    <span className="material-symbols-outlined mr-1 text-sm">
+                      open_in_new
+                    </span>
+                    <span>Открыть в новой вкладке</span>
+                  </a>
+                </>
+              )}
             </div>
           </section>
 
@@ -204,14 +275,18 @@ export function GeneratedArtifactDetailPage() {
             <Button
               type="button"
               variant="outline"
-              className="h-10 rounded-lg border border-rose-200 cursor-pointer bg-rose-50 text-xs font-semibold text-rose-700 hover:bg-rose-100"
+              onClick={() => handleReview("rejected_by_ba")}
+              disabled={reviewMutation.isPending}
+              className="h-10 rounded-lg border border-rose-200 cursor-pointer bg-rose-50 text-xs font-semibold text-rose-700 hover:bg-rose-100 disabled:opacity-60"
             >
               Не принимать
             </Button>
 
             <Button
               type="button"
-              className="h-10 rounded-lg bg-emerald-600 cursor-pointer text-xs font-semibold text-white hover:bg-emerald-700"
+              onClick={() => handleReview("approved_by_ba")}
+              disabled={reviewMutation.isPending}
+              className="h-10 rounded-lg bg-emerald-600 cursor-pointer text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
             >
               Принять
             </Button>

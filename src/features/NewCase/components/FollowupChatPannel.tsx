@@ -110,8 +110,7 @@ export default function ChatPanel({
           bg-white dark:bg-[#2c282f]
           rounded-xl border border-gray-200 dark:border-gray-700
           overflow-hidden
-          h-[520px]
-          md:h-auto md:max-h-screen
+          h-[600px]             
         "
       >
         {isGenerating && (

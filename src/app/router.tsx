@@ -14,6 +14,8 @@ import { GeneratedArtifactDetailPage } from "@/features/Artifacts/GeneratedArtif
 import { BACaseBriefPage } from "@/features/NewCase/steps/BAInitialStep";
 import { AnalyticArtifactsStep } from "@/features/NewCase/steps/BAArtifactsStep";
 import { AnalyticFollowupChat } from "@/features/NewCase/BAFollowupChat";
+import { AnalyticGeneratedArtifactsListPage } from "@/features/Artifacts/BAAnalyticGenerateedArtifactsListPage";
+import { AnalyticGeneratedArtifactDetailPage } from "@/features/Artifacts/AnalyticGeneratedArtifactDetailPage";
 
 export function AppRouter() {
   return (
@@ -85,18 +87,13 @@ export function AppRouter() {
             path={HK_ROUTES.private.CASES.ANALYTIC.FOLLOW_UP}
             element={<AnalyticFollowupChat />}
           />
-
           <Route
-            path={HK_ROUTES.private.CASES.CLIENT.FOLLOW_UP}
-            element={<FollowupChat />}
+            path={HK_ROUTES.private.ARTIFACTS.ANALYTIC.GENERATED}
+            element={<AnalyticGeneratedArtifactsListPage />}
           />
           <Route
-            path={HK_ROUTES.private.ARTIFACTS.CLIENT.GENERATED}
-            element={<GeneratedArtifactsListPage />}
-          />
-          <Route
-            path={HK_ROUTES.private.ARTIFACTS.CLIENT.DETAILED}
-            element={<GeneratedArtifactDetailPage />}
+            path={HK_ROUTES.private.ARTIFACTS.ANALYTIC.DETAILED}
+            element={<AnalyticGeneratedArtifactDetailPage />}
           />
         </Route>
       </Route>

@@ -18,10 +18,16 @@ export interface GeneratedDocumentFile {
   id: string;
   doc_type: string;
   title: string;
+
   status: DocumentStatusVariation;
+
   generation_status: DocumetGenerationVariation;
-  docx_url: string;
-  docx_path: string;
+
+  docx_url: string | null;
+  docx_path: string | null;
+
+  diagram_url: string | null;
+  diagram_path: string | null;
 }
 
 export interface EnsureDocumentsResponse {
