@@ -11,6 +11,13 @@ import { HK_ROUTES } from "@/consts/HK_ROUTES";
 import { casesQK } from "@/features/Cases/hooks/casesQueryKeys";
 import { useQueryClient } from "@tanstack/react-query";
 
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
 interface Props {
   answers: CaseInitialAnswers | undefined;
   onFinished?: () => void;
@@ -154,14 +161,25 @@ export function CaseThirdStep({ answers: answersProp, onFinished }: Props) {
             </p>
           </div>
 
-          <button
-            type="button"
-            title={a.description}
-            className="inline-flex size-5 items-center justify-center rounded-full border border-[#E3E1E8] bg-white text-[11px] text-[#888085]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            ?
-          </button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                className="inline-flex size-5 items-center justify-center rounded-full border border-[#E3E1E8] bg-white text-[11px] text-[#888085]"
+                onClick={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+              >
+                ?
+              </button>
+            </TooltipTrigger>
+            <TooltipContent
+              side="top"
+              align="end"
+              className="max-w-xs text-xs leading-snug text-[#1B1B1F] bg-white"
+            >
+              {a.description}
+            </TooltipContent>
+          </Tooltip>
         </div>
 
         <div className="flex justify-end">

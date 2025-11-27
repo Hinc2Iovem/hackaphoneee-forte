@@ -82,7 +82,7 @@ export function GeneratedArtifactDetailPage() {
               navigate(
                 caseId
                   ? HK_ROUTES.private.ARTIFACTS.CLIENT.GENERATED_VALUE(caseId)
-                  : "/cases"
+                  : HK_ROUTES.private.CASES.SHARED.BASE
               )
             }
             className="inline-flex items-center cursor-pointer gap-2 text-sm text-[#A31551] hover:underline mb-4"
@@ -104,7 +104,9 @@ export function GeneratedArtifactDetailPage() {
         <button
           type="button"
           onClick={() =>
-            navigate(HK_ROUTES.private.ARTIFACTS.CLIENT.GENERATED_VALUE(caseId))
+            navigate(
+              HK_ROUTES.private.ARTIFACTS.CLIENT.GENERATED_VALUE(caseId || "")
+            )
           }
           className="inline-flex items-center cursor-pointer gap-2 text-sm text-[#A31551] hover:underline"
         >
