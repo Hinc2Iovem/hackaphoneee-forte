@@ -5,7 +5,17 @@ import { useNavigate } from "react-router-dom";
 export default function CasesEmptyState() {
   const navigate = useNavigate();
 
-  const goToNewCase = () => navigate(HK_ROUTES.private.CASES.NEW);
+  const handleCreateNew = () => {
+    try {
+      sessionStorage.removeItem("hk_new_case_draft");
+      sessionStorage.removeItem("hk_new_case_step1");
+      sessionStorage.removeItem("hk_new_case_step2");
+    } catch (e) {
+      console.warn("[CaseListTable] failed to clear new case draft", e);
+    }
+
+    navigate(HK_ROUTES.private.CASES.NEW);
+  };
 
   return (
     <div className="w-full bg-[#F7F6F8]">
@@ -44,7 +54,7 @@ export default function CasesEmptyState() {
                 <div className="flex flex-wrap gap-3 pt-1">
                   <Button
                     className="rounded-full px-6 h-11"
-                    onClick={goToNewCase}
+                    onClick={handleCreateNew}
                   >
                     <span className="material-symbols-outlined text-xl! mr-2">
                       add_circle

@@ -51,7 +51,7 @@ export const CASE_INITIAL_QUESTIONS: {
 export type ArtifactGroup = "document" | "diagram";
 export const ARTIFACTS = [
   {
-    code: "vision_problem",
+    code: "vision",
     label: "Vision / Problem Statement",
     icon: "lightbulb",
     group: "document" as const,
@@ -188,7 +188,7 @@ export const ARTIFACT_META: Record<
   Artifact["code"],
   { icon: string; label: string }
 > = {
-  vision_problem: { icon: "lightbulb", label: "Vision / Problem Statement" },
+  vision: { icon: "lightbulb", label: "Vision / Problem Statement" },
   scope: { icon: "center_focus_strong", label: "Scope (In/Out)" },
   brd: { icon: "description", label: "Business Requirements (BRD)" },
   user_stories: {

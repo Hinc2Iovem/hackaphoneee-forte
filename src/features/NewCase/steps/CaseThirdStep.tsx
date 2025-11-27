@@ -130,7 +130,7 @@ export function CaseThirdStep({ answers: answersProp, onFinished }: Props) {
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-start gap-2">
             <div
-              className={`mt-[2px] flex h-7 w-7 items-center justify-center rounded-md ${
+              className={`mt-0.5 flex h-7 w-7 items-center justify-center rounded-md ${
                 isActive ? "bg-[#A31551]" : "bg-[#F1EFF4]"
               }`}
             >

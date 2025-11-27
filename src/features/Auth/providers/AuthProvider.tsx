@@ -17,6 +17,7 @@ import {
   setAuthTokens,
   type AuthResponse,
 } from "@/api/axios";
+import { useQueryClient } from "@tanstack/react-query";
 
 type AuthContextValue = {
   user: StoredAuth | null;
@@ -28,6 +29,7 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<StoredAuth | null>(() => {
     const persisted = loadAuthFromSession();
     return persisted ?? null;
@@ -91,6 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await axiosAuth.post("/auth/logout", {
           refreshToken: user.refreshToken,
         });
+        queryClient.clear();
       } catch {}
     }
     setUser(null);

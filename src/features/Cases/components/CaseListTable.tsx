@@ -57,6 +57,18 @@ export function CaseListTable({ cases }: Props) {
     return filteredCases.slice(start, start + perPage);
   }, [filteredCases, page, perPage]);
 
+  const handleCreateNew = () => {
+    try {
+      sessionStorage.removeItem("hk_new_case_draft");
+      sessionStorage.removeItem("hk_new_case_step1");
+      sessionStorage.removeItem("hk_new_case_step2");
+    } catch (e) {
+      console.warn("[CaseListTable] failed to clear new case draft", e);
+    }
+
+    navigate(HK_ROUTES.private.CASES.NEW);
+  };
+
   return (
     <div className="w-full bg-background">
       <div className="mx-auto max-w-6xl px-4 lg:px-0 py-8">
@@ -65,7 +77,7 @@ export function CaseListTable({ cases }: Props) {
             Моя доска
           </h1>
           <Button
-            onClick={() => navigate(HK_ROUTES.private.CASES.NEW)}
+            onClick={handleCreateNew}
             className="h-11 rounded-md cursor-pointer px-5 md:px-6 shadow-[0_4px_4px_rgba(0,0,0,0.1)]"
           >
             <span className="material-symbols-outlined text-xl! mr-2">
