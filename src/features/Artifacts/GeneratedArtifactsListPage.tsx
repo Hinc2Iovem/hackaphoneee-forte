@@ -42,7 +42,7 @@ export function GeneratedArtifactsListPage() {
   const { data: caseDetail } = useGetCaseDetail(caseId);
   const { data, isLoading, isError } = useEnsureCaseDocuments(caseId);
 
-  const artifacts = data?.documents ?? [];
+  const artifacts = data?.files ?? [];
 
   const handleOpen = (artifactId: string) => {
     if (!caseId) return;
@@ -65,7 +65,7 @@ export function GeneratedArtifactsListPage() {
 
         <div className="space-y-1">
           <h1 className="text-xl md:text-2xl font-semibold text-[#1B1B1F]">
-            {caseDetail?.title ?? "Кейс"}
+            {caseDetail?.title ?? data?.case_title ?? "Кейс"}
           </h1>
           <p className="text-xs text-[#888085]">Список артефактов</p>
         </div>
@@ -96,10 +96,15 @@ export function GeneratedArtifactsListPage() {
                   key={art.id}
                   type="button"
                   onClick={() => handleOpen(art.id)}
-                  className="flex w-full items-center justify-between rounded-xl bg-white px-5 py-4 text-left text-sm md:text-base text-[#1B1B1F] shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition hover:bg-[#FDF7FA]"
+                  className="flex w-full cursor-pointer items-center justify-between rounded-xl bg-white px-5 py-4 text-left text-sm md:text-base text-[#1B1B1F] shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition hover:bg-[#FDF7FA]"
                 >
-                  <span>{art.title}</span>
-                  <StatusBadge status={art.status ? art.status : "draft"} />
+                  <div className="flex flex-col gap-1">
+                    <span>{art.title}</span>
+                    <span className="text-[11px] text-[#888085] uppercase tracking-[0.12em]">
+                      {art.doc_type}
+                    </span>
+                  </div>
+                  <StatusBadge status={art.status ?? "draft"} />
                 </button>
               ))
             )}

@@ -63,8 +63,23 @@ export default function ChatPanel({
 
   async function submitAnswer() {
     if (!canSend || !nextQuestion?.question_id) return;
-    await onSubmitAnswer(answer.trim(), nextQuestion.question_id);
-    setAnswer("");
+
+    const isLastQuestion =
+      typeof totalQuestions === "number" &&
+      totalQuestions > 0 &&
+      answeredQuestions + 1 >= totalQuestions;
+
+    try {
+      await onSubmitAnswer(answer.trim(), nextQuestion.question_id);
+      setAnswer("");
+
+      if (isLastQuestion) {
+        await goToArtifacts();
+      }
+    } catch (error) {
+      console.error(error);
+      toastError("Не удалось сохранить ответ");
+    }
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -286,7 +301,13 @@ export default function ChatPanel({
             >
               Продолжить диалог
             </Button>
-            <Button type="button" onClick={goToArtifacts}>
+            <Button
+              type="button"
+              onClick={() => {
+                setFinishDialogOpen(false);
+                void goToArtifacts();
+              }}
+            >
               Перейти к артефактам
             </Button>
           </DialogFooter>

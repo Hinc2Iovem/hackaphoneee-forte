@@ -1,26 +1,29 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useGetCaseDetail } from "@/features/Cases/hooks/useGetCaseDetail";
 import {
-  MOCK_CASE,
-  MOCK_GENERATED_ARTIFACTS,
-  type ArtifactGenerationStatus,
-  type GeneratedArtifact,
-} from "./mock-data";
+  useEnsureCaseDocuments,
+  type EnsureDocumentsResponse,
+} from "@/features/Cases/hooks/useGetCaseDocuments";
+import type { DocumentStatusVariation } from "@/features/Artifacts/mock-data";
+import ArtifactsSpinner from "@/features/NewCase/components/ArtifactsLoading";
 
-function StatusPill({ status }: { status: ArtifactGenerationStatus }) {
+type GeneratedDocumentFile = EnsureDocumentsResponse["files"][number];
+
+function StatusPill({ status }: { status: DocumentStatusVariation }) {
   const config: Record<
-    ArtifactGenerationStatus,
+    DocumentStatusVariation,
     { label: string; className: string }
   > = {
-    accepted: {
+    approved_by_ba: {
       label: "Принят",
       className: "bg-emerald-50 text-emerald-700",
     },
-    rejected: {
+    rejected_by_ba: {
       label: "Не принят",
       className: "bg-rose-50 text-rose-700",
     },
-    pending: {
+    draft: {
       label: "На проверке",
       className: "bg-amber-50 text-amber-700",
     },
@@ -44,36 +47,69 @@ export function GeneratedArtifactDetailPage() {
     artifactId: string;
   }>();
 
-  const currentCase = MOCK_CASE;
-  const artifacts = MOCK_GENERATED_ARTIFACTS;
+  const { data: caseDetail } = useGetCaseDetail(caseId);
+  const { data, isLoading, isError } = useEnsureCaseDocuments(caseId);
 
-  const selected: GeneratedArtifact =
+  const artifacts = data?.files ?? [];
+  const selected: GeneratedDocumentFile | undefined =
     artifacts.find((a) => a.id === artifactId) ?? artifacts[0];
 
   const handleSelectFromSidebar = (id: string) => {
-    const cid = caseId ?? currentCase.id;
-    navigate(`/cases/${cid}/artifacts/${id}`);
+    if (!caseId) return;
+    navigate(`/cases/${caseId}/artifacts/${id}`);
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-[calc(100vh-64px)] bg-[#F7F6F8]">
+        <div className="mx-auto w-full max-w-6xl px-4 py-10">
+          <div className="flex items-center justify-center rounded-2xl bg-white px-6 py-10 shadow-[0_6px_20px_rgba(0,0,0,0.06)]">
+            <ArtifactsSpinner />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError || !selected) {
+    return (
+      <div className="min-h-[calc(100vh-64px)] bg-[#F7F6F8]">
+        <div className="mx-auto w-full max-w-6xl px-4 py-10">
+          <button
+            type="button"
+            onClick={() =>
+              navigate(caseId ? `/cases/${caseId}/artifacts` : "/cases")
+            }
+            className="inline-flex items-center cursor-pointer gap-2 text-sm text-[#A31551] hover:underline mb-4"
+          >
+            <span className="material-symbols-outlined text-base">
+              arrow_back
+            </span>
+            <span>Назад</span>
+          </button>
+          <p className="text-sm text-red-500">Не удалось загрузить документ.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-[#F7F6F8]">
       <div className="mx-auto w-full max-w-6xl px-4 py-6 space-y-6">
         <button
           type="button"
-          onClick={() =>
-            navigate(`/cases/${caseId ?? currentCase.id}/artifacts`)
-          }
+          onClick={() => navigate(`/cases/${caseId}/artifacts`)}
           className="inline-flex items-center cursor-pointer gap-2 text-sm text-[#A31551] hover:underline"
         >
           <span className="material-symbols-outlined text-base">
             arrow_back
           </span>
-          <span>К артифактам</span>
+          <span>К артефактам</span>
         </button>
 
         <div className="space-y-1">
           <h1 className="text-xl md:text-2xl font-semibold text-[#1B1B1F]">
-            {currentCase.title}
+            {caseDetail?.title ?? data?.case_title ?? "Кейс"}
           </h1>
           <p className="text-xs text-[#888085]">Редактирование артефактов</p>
         </div>
@@ -97,7 +133,12 @@ export function GeneratedArtifactDetailPage() {
                         : "border border-transparent bg-[#F7F6F8] text-[#1B1B1F] hover:border-[#A31551]/40"
                     }`}
                   >
-                    {art.title}
+                    <div className="flex flex-col gap-1">
+                      <span>{art.title}</span>
+                      <span className="text-[10px] text-[#888085] uppercase tracking-[0.16em]">
+                        {art.doc_type}
+                      </span>
+                    </div>
                   </button>
                 );
               })}
@@ -110,30 +151,43 @@ export function GeneratedArtifactDetailPage() {
                 <h2 className="text-base md:text-lg font-semibold text-[#1B1B1F]">
                   {selected.title}
                 </h2>
-                <StatusPill status={selected.status} />
+                <StatusPill status={selected.status ?? "draft"} />
               </div>
             </header>
 
-            <div className="flex-1 overflow-y-auto rounded-xl bg-[#F7F6F8] p-4 text-xs md:text-sm leading-relaxed text-[#1B1B1F] whitespace-pre-wrap">
-              {selected.content}
+            <div className="flex-1 flex flex-col items-center justify-center rounded-xl border border-[#E3E1E8] bg-[#F7F6F8] px-4 py-6 text-center">
+              <p className="text-sm text-[#55505A]">
+                Предпросмотр DOCX в браузере недоступен.
+              </p>
+              <p className="mt-1 text-xs text-[#888085]">
+                Скачайте файл, чтобы открыть его в Word, Google Docs или другом
+                редакторе документов.
+              </p>
             </div>
 
-            <div className="mt-4">
-              <div className="relative">
-                <textarea
-                  rows={3}
-                  placeholder="Опишите, что нужно изменить в документе…"
-                  className="w-full resize-none rounded-xl border border-[#E3E1E8] bg-[#F7F6F8] px-3 py-2 pr-10 text-xs md:text-sm text-[#1B1B1F] placeholder:text-[#B0A9B5] focus-visible:border-[#A31551] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A31551]/30"
-                />
-                <button
-                  type="button"
-                  className="absolute bottom-1/2 translate-y-1/2 cursor-pointer right-2 inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#A31551] text-white shadow hover:bg-[#8F1246]"
-                >
-                  <span className="material-symbols-outlined text-[20px]!">
-                    send
-                  </span>
-                </button>
-              </div>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <a
+                href={selected.docx_url}
+                download
+                className="inline-flex cursor-pointer items-center justify-center rounded-lg bg-[#A31551] px-4 py-2 text-xs font-semibold text-white hover:bg-[#8F1246]"
+              >
+                <span className="material-symbols-outlined mr-1 text-sm">
+                  download
+                </span>
+                <span>Скачать DOCX</span>
+              </a>
+
+              <a
+                href={selected.docx_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-[#E3E1E8] bg-white px-3 py-2 text-xs font-medium text-[#55505A] hover:bg-[#F7F6F8]"
+              >
+                <span className="material-symbols-outlined mr-1 text-sm">
+                  open_in_new
+                </span>
+                <span>Открыть в новой вкладке</span>
+              </a>
             </div>
           </section>
 

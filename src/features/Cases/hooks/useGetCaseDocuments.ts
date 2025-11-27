@@ -1,7 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { axiosCustomized } from "@/api/axios";
 import { casesQK } from "./casesQueryKeys";
-import type { DocumentStatusVariation } from "@/features/Artifacts/mock-data";
+import type {
+  DocumentStatusVariation,
+  DocumetGenerationVariation,
+} from "@/features/Artifacts/mock-data";
 
 export type ArtifactGenerationStatus = "accepted" | "rejected" | "pending";
 
@@ -11,10 +14,22 @@ export interface GeneratedArtifact {
   status: DocumentStatusVariation;
 }
 
+export interface GeneratedDocumentFile {
+  id: string;
+  doc_type: string;
+  title: string;
+  status: DocumentStatusVariation;
+  generation_status: DocumetGenerationVariation;
+  docx_url: string;
+  docx_path: string;
+}
+
 export interface EnsureDocumentsResponse {
-  documents: GeneratedArtifact[];
-  errors: string[];
+  case_id: string;
+  case_title: string;
   did_generate_any: boolean;
+  errors: Record<string, unknown>;
+  files: GeneratedDocumentFile[];
 }
 
 type ExtraOptions = {

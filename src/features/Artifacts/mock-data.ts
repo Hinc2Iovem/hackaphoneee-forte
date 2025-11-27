@@ -6,6 +6,8 @@ export type DocumentStatusVariation =
   | "rejected_by_ba"
   | "draft";
 
+export type DocumetGenerationVariation = "generating" | "failed" | "ready";
+
 export interface GeneratedArtifact {
   id: string;
   title: string;
