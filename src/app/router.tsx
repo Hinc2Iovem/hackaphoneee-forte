@@ -9,6 +9,8 @@ import { FollowupChat } from "@/features/NewCase/FollowupChat";
 import { NewCase } from "@/features/NewCase/NewCase";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AppLayout } from "./layout/AppLayout";
+import { GeneratedArtifactsListPage } from "@/features/Artifacts/GeneratedArtifactsListPage";
+import { GeneratedArtifactDetailPage } from "@/features/Artifacts/GeneratedArtifactDetailPage";
 
 export function AppRouter() {
   return (
@@ -39,6 +41,15 @@ export function AppRouter() {
           <Route
             path={HK_ROUTES.private.CASES.EDIT_INITIAL}
             element={<EditCaseInitialStep />}
+          />
+
+          <Route
+            path={HK_ROUTES.private.ARTIFACTS.GENERATED}
+            element={<GeneratedArtifactsListPage />}
+          />
+          <Route
+            path={HK_ROUTES.private.ARTIFACTS.DETAILED}
+            element={<GeneratedArtifactDetailPage />}
           />
         </Route>
       </Route>

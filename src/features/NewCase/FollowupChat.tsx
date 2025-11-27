@@ -62,7 +62,7 @@ export function FollowupChat() {
           <p className="text-sm text-[#888085]">Уточняющий диалог</p>
         </div>
       </div>
-      <div className="flex h-full max-h-screen w-full flex-col lg:flex-row gap-6">
+      <div className="flex w-full flex-col lg:flex-row gap-6 md:min-h-[520px]">
         <ChatPanel
           caseDetail={caseDetail}
           isCaseLoading={isCaseLoading}
@@ -80,8 +80,7 @@ export function FollowupChat() {
             });
           }}
         />
-
-        <aside className="w-full lg:w-[35%] max-w-sm h-full max-h-screen flex flex-col gap-4 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent">
+        <aside className="w-full lg:w-[35%] lg:max-w-sm h-full max-h-screen flex flex-col gap-4 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent">
           <BriefSidebar
             caseDetail={caseDetail}
             caseId={caseId}

@@ -17,5 +17,11 @@ export const HK_ROUTES = {
       EDIT_INITIAL: "/cases/:caseId/edit-initial",
       EDIT_INITIAL_VALUE: (caseId: string) => `/cases/${caseId}/edit-initial`,
     },
+    ARTIFACTS: {
+      GENERATED: "/cases/:caseId/artifacts",
+      DETAILED: "/cases/:caseId/artifacts/:artifactId",
+      DETAILED_VALUE: (caseId: string, artifactId: string) =>
+        `/cases/${caseId}/artifacts/${artifactId}`,
+    },
   },
 };

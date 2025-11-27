@@ -53,7 +53,17 @@ export default function ChatPanel({
   }
 
   return (
-    <section className="flex-1 flex flex-col bg-white dark:bg-[#2c282f] rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden max-h-screen">
+    <section
+      className="
+    flex-1 flex flex-col
+    bg-white dark:bg-[#2c282f]
+    rounded-xl border border-gray-200 dark:border-gray-700
+    overflow-hidden
+    h-[520px]             
+    md:h-auto md:max-h-screen  
+  "
+    >
+      {" "}
       <header className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-6 py-3">
         <div>
           <h1 className="text-lg font-semibold">
@@ -69,7 +79,6 @@ export default function ChatPanel({
           )}
         </div>
       </header>
-
       <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent">
         {isCaseLoading ? (
           <div className="text-sm text-gray-500">Загружаем диалог…</div>
@@ -160,7 +169,6 @@ export default function ChatPanel({
           </>
         )}
       </div>
-
       {!finished && (
         <form
           onSubmit={handleSubmit}
