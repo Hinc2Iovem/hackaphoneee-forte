@@ -47,7 +47,7 @@ export function NewCase() {
   return (
     <Routes>
       <Route
-        path=""
+        index
         element={
           <CaseInitialStep
             initialTitle={draft?.title}
@@ -64,7 +64,7 @@ export function NewCase() {
         }
       />
 
-      <Route path="*" element={<Navigate to="/cases/new" replace />} />
+      <Route path="*" element={<Navigate to="." replace />} />
     </Routes>
   );
 }

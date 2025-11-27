@@ -1,9 +1,12 @@
+import { useAuth } from "../Auth/providers/AuthProvider";
+import { BACaseListTable } from "./components/BACaseListTable";
 import { CaseListTable } from "./components/CaseListTable";
 import CasesEmptyState from "./components/CasesEmptyState";
 import CasesSkeleton from "./components/CasesSkeleton";
 import { useGetCasesList } from "./hooks/useGetCasesList";
 
 export function CasesPage() {
+  const { user } = useAuth();
   const { data, isLoading, isError } = useGetCasesList();
 
   if (isLoading) {
@@ -22,5 +25,9 @@ export function CasesPage() {
     return <CasesEmptyState />;
   }
 
-  return <CaseListTable cases={data} />;
+  return user?.role && user.role === "ANALYTIC" ? (
+    <BACaseListTable cases={data} />
+  ) : (
+    <CaseListTable cases={data} />
+  );
 }

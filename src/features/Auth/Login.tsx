@@ -37,9 +37,12 @@ export function LoginPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="sticky top-0 z-20 flex items-center justify-between px-6 py-3 bg-card shadow-[0_4px_4px_rgba(0,0,0,0.1)]">
-        <h1 className="text-lg font-bold tracking-[-0.02em] text-primary">
-          AI Бизнес – аналитик
-        </h1>
+        <div className="flex items-center gap-2">
+          <img src="/Logo.svg" alt="Logo" className="w-8" />
+          <h1 className="text-lg font-bold tracking-[-0.02em] text-primary">
+            Talap AI
+          </h1>
+        </div>
         <div className="flex items-center gap-2 text-xs text-[#888085]">
           <span className="material-symbols-outlined text-base">shield</span>
           <span>Безопасный вход</span>

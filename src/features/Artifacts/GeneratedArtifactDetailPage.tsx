@@ -7,6 +7,7 @@ import {
 } from "@/features/Cases/hooks/useGetCaseDocuments";
 import type { DocumentStatusVariation } from "@/features/Artifacts/mock-data";
 import ArtifactsSpinner from "@/features/NewCase/components/ArtifactsLoading";
+import { HK_ROUTES } from "@/consts/HK_ROUTES";
 
 type GeneratedDocumentFile = EnsureDocumentsResponse["files"][number];
 
@@ -56,7 +57,7 @@ export function GeneratedArtifactDetailPage() {
 
   const handleSelectFromSidebar = (id: string) => {
     if (!caseId) return;
-    navigate(`/cases/${caseId}/artifacts/${id}`);
+    navigate(HK_ROUTES.private.ARTIFACTS.CLIENT.DETAILED_VALUE(caseId, id));
   };
 
   if (isLoading) {
@@ -78,7 +79,11 @@ export function GeneratedArtifactDetailPage() {
           <button
             type="button"
             onClick={() =>
-              navigate(caseId ? `/cases/${caseId}/artifacts` : "/cases")
+              navigate(
+                caseId
+                  ? HK_ROUTES.private.ARTIFACTS.CLIENT.GENERATED_VALUE(caseId)
+                  : "/cases"
+              )
             }
             className="inline-flex items-center cursor-pointer gap-2 text-sm text-[#A31551] hover:underline mb-4"
           >
@@ -98,7 +103,9 @@ export function GeneratedArtifactDetailPage() {
       <div className="mx-auto w-full max-w-6xl px-4 py-6 space-y-6">
         <button
           type="button"
-          onClick={() => navigate(`/cases/${caseId}/artifacts`)}
+          onClick={() =>
+            navigate(HK_ROUTES.private.ARTIFACTS.CLIENT.GENERATED_VALUE(caseId))
+          }
           className="inline-flex items-center cursor-pointer gap-2 text-sm text-[#A31551] hover:underline"
         >
           <span className="material-symbols-outlined text-base">

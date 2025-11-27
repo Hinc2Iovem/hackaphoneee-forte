@@ -9,7 +9,7 @@ export function AuthNotRequired() {
   const isLoggedIn = !!user && !user.loggedOut;
 
   if (isLoggedIn) {
-    return <Navigate to={HK_ROUTES.private.CASES.BASE} replace />;
+    return <Navigate to={HK_ROUTES.private.CASES.SHARED.BASE} replace />;
   }
 
   return <Outlet />;

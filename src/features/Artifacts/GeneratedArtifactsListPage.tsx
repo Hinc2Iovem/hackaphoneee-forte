@@ -46,7 +46,9 @@ export function GeneratedArtifactsListPage() {
 
   const handleOpen = (artifactId: string) => {
     if (!caseId) return;
-    navigate(HK_ROUTES.private.ARTIFACTS.DETAILED_VALUE(caseId, artifactId));
+    navigate(
+      HK_ROUTES.private.ARTIFACTS.CLIENT.DETAILED_VALUE(caseId, artifactId)
+    );
   };
 
   return (
@@ -54,7 +56,7 @@ export function GeneratedArtifactsListPage() {
       <div className="mx-auto w-full max-w-6xl px-4 py-6 space-y-6">
         <button
           type="button"
-          onClick={() => navigate(HK_ROUTES.private.CASES.BASE)}
+          onClick={() => navigate(HK_ROUTES.private.CASES.SHARED.BASE)}
           className="inline-flex items-center cursor-pointer gap-2 text-sm text-[#A31551] hover:underline"
         >
           <span className="material-symbols-outlined text-base">

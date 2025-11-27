@@ -9,6 +9,8 @@ import { useCreateCase } from "@/features/Cases/hooks/useCreateCase";
 import { CASE_INITIAL_QUESTIONS } from "../consts/CASE_INITIAL_QUESTIONS";
 import { HK_ROUTES } from "@/consts/HK_ROUTES";
 import NewCaseHeader from "../components/NewCaseHeader";
+import { useQueryClient } from "@tanstack/react-query";
+import { casesQK } from "@/features/Cases/hooks/casesQueryKeys";
 
 export type CaseInitialAnswers = Record<string, string>;
 
@@ -30,6 +32,7 @@ export function CaseInitialStep({
   initialAnswers,
   onSaveLocal,
 }: Props) {
+  const queryClient = useQueryClient();
   const [title, setTitle] = useState(initialTitle);
   const [answers, setAnswers] = useState<CaseInitialAnswers>(
     initialAnswers ??
@@ -94,10 +97,12 @@ export function CaseInitialStep({
     onSaveLocal?.({ title: trimmedTitle, answers });
 
     const session = await createCase({ title: trimmedTitle });
-
+    queryClient.invalidateQueries({
+      queryKey: casesQK.all,
+    });
     sessionStorage.removeItem(SS_KEY);
 
-    navigate(`/cases/new/${session.id}/artifacts`);
+    navigate(`/client/cases/new/${session.id}/artifacts`);
   }
 
   return (
@@ -150,7 +155,7 @@ export function CaseInitialStep({
           <Button
             type="button"
             variant="outline"
-            onClick={() => navigate(HK_ROUTES.private.CASES.BASE)}
+            onClick={() => navigate(HK_ROUTES.private.CASES.SHARED.BASE)}
             className="h-11 rounded-lg border border-[#E3E1E8] bg-white px-6 text-sm font-medium text-[#1B1B1F] hover:bg-[#F1EFF4]"
           >
             Отменить

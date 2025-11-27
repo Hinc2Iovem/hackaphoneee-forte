@@ -13,7 +13,7 @@ export default function CasesSkeleton() {
             Моя доска
           </h1>
           <Button
-            onClick={() => navigate(HK_ROUTES.private.CASES.NEW)}
+            onClick={() => navigate(HK_ROUTES.private.CASES.CLIENT.NEW)}
             className="h-11 rounded-md px-5 md:px-6"
           >
             <span className="material-symbols-outlined text-xl! mr-2">

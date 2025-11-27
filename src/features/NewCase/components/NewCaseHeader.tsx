@@ -16,7 +16,7 @@ export default function NewCaseHeader({
     <div className="space-y-4">
       <button
         type="button"
-        onClick={() => navigate(HK_ROUTES.private.CASES.BASE)}
+        onClick={() => navigate(HK_ROUTES.private.CASES.SHARED.BASE)}
         className="inline-flex cursor-pointer items-center gap-2 text-sm text-[#5F5A60] hover:text-[#A31551]"
       >
         <span className="material-symbols-outlined text-base">arrow_back</span>

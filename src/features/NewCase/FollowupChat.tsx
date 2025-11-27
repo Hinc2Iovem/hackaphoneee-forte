@@ -85,14 +85,18 @@ export function FollowupChat() {
             caseDetail={caseDetail}
             caseId={caseId}
             onEditInitial={() =>
-              navigate(HK_ROUTES.private.CASES.EDIT_INITIAL_VALUE(caseId!))
+              navigate(
+                HK_ROUTES.private.CASES.CLIENT.EDIT_INITIAL_VALUE(caseId!)
+              )
             }
           />
 
           <ArtifactsSidebar
             caseDetail={caseDetail}
             dataSufficiencyPercent={dataSufficiencyPercent}
-            onEditArtifacts={() => navigate(`/cases/new/${caseId}/artifacts`)}
+            onEditArtifacts={() =>
+              navigate(`/client/cases/new/${caseId}/artifacts`)
+            }
           />
         </aside>
       </div>

@@ -14,7 +14,7 @@ export default function CasesEmptyState() {
       console.warn("[CaseListTable] failed to clear new case draft", e);
     }
 
-    navigate(HK_ROUTES.private.CASES.NEW);
+    navigate(HK_ROUTES.private.CASES.CLIENT.NEW);
   };
 
   return (

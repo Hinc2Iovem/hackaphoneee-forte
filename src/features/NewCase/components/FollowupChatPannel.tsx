@@ -94,7 +94,7 @@ export default function ChatPanel({
       toastSuccess("Документы успешно созданы");
       setFinishDialogOpen(false);
       navigate(
-        HK_ROUTES.private.ARTIFACTS.GENERATED.replace(":caseId", caseId)
+        HK_ROUTES.private.ARTIFACTS.CLIENT.GENERATED.replace(":caseId", caseId)
       );
     } catch (error) {
       toastError(`Что-то пошло не так: ${error}`);

@@ -7,6 +7,9 @@ import type { CaseInitialAnswers } from "./CaseInitialStep";
 import { useGetCaseDetail } from "@/features/Cases/hooks/useGetCaseDetail";
 import NewCaseHeader from "../components/NewCaseHeader";
 import ArtifactsLoading from "../components/ArtifactsLoading";
+import { HK_ROUTES } from "@/consts/HK_ROUTES";
+import { casesQK } from "@/features/Cases/hooks/casesQueryKeys";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Props {
   answers: CaseInitialAnswers | undefined;
@@ -19,6 +22,7 @@ type Step2Draft = {
 };
 
 export function CaseThirdStep({ answers: answersProp, onFinished }: Props) {
+  const queryClient = useQueryClient();
   const { caseId } = useParams<{ caseId: string }>();
   const navigate = useNavigate();
   const { data: caseDetail } = useGetCaseDetail(caseId!, {
@@ -95,7 +99,10 @@ export function CaseThirdStep({ answers: answersProp, onFinished }: Props) {
       });
 
       onFinished?.();
-      navigate(`/cases/${caseId}/followup`);
+      queryClient.invalidateQueries({
+        queryKey: casesQK.all,
+      });
+      navigate(HK_ROUTES.private.CASES.CLIENT.FOLLOW_UP_VALUE(caseId || ""));
     } finally {
       setIsGenerating(false);
     }

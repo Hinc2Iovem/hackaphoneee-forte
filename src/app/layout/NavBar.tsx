@@ -35,11 +35,12 @@ export function NavBar() {
       "
     >
       <Link
-        to={HK_ROUTES.private.CASES.BASE}
+        to={HK_ROUTES.private.CASES.SHARED.BASE}
         className="cursor-pointer flex items-center gap-3 text-gray-800 dark:text-gray-200"
       >
+        <img src="/Logo.svg" alt="Logo" className="w-8" />
         <h2 className="text-lg font-bold leading-tight tracking-[-0.015em] text-primary">
-          AI Бизнес - аналитик
+          Talap AI
         </h2>
       </Link>
 

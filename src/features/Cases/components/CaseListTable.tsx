@@ -1,5 +1,13 @@
 import { StatusPill } from "@/components/shared/status-pill";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+} from "@/components/ui/alert-dialog";
 import { HK_ROUTES } from "@/consts/HK_ROUTES";
 import { cn } from "@/lib/utils";
 import type { CaseDetailTypes, CaseStatusVariation } from "@/types/CaseTypes";
@@ -7,6 +15,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CasesPagination } from "./CasesPagination";
 import { useCasesTableStore } from "../store/useCasesTableStore";
+import { useDeleteCase } from "@/features/Cases/hooks/useDeleteCase";
+import { toastError, toastSuccess } from "@/components/shared/toasts";
 
 interface Props {
   cases: CaseDetailTypes[];
@@ -30,6 +40,13 @@ export function CaseListTable({ cases }: Props) {
   const page = useCasesTableStore((state) => state.page);
   const perPage = useCasesTableStore((state) => state.perPage);
   const setPage = useCasesTableStore((state) => state.setPage);
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [caseToDelete, setCaseToDelete] = useState<CaseDetailTypes | null>(
+    null
+  );
+
+  const { mutateAsync: deleteCase, isPending: isDeleting } = useDeleteCase();
 
   const filteredCases = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -66,8 +83,29 @@ export function CaseListTable({ cases }: Props) {
       console.warn("[CaseListTable] failed to clear new case draft", e);
     }
 
-    navigate(HK_ROUTES.private.CASES.NEW);
+    navigate(HK_ROUTES.private.CASES.CLIENT.NEW);
   };
+
+  function openDeleteDialog(c: CaseDetailTypes) {
+    setCaseToDelete(c);
+    setDeleteDialogOpen(true);
+  }
+
+  async function handleConfirmDelete() {
+    if (!caseToDelete) return;
+    try {
+      await deleteCase(caseToDelete.id);
+      toastSuccess("Кейс удалён", {
+        description: caseToDelete.title,
+      });
+    } catch (e) {
+      console.error(e);
+      toastError("Не удалось удалить кейс");
+    } finally {
+      setDeleteDialogOpen(false);
+      setCaseToDelete(null);
+    }
+  }
 
   return (
     <div className="w-full bg-background">
@@ -132,36 +170,64 @@ export function CaseListTable({ cases }: Props) {
           ))}
         </div>
 
-        <div className="hidden md:grid grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_140px] items-center px-6 py-2 text-xs font-medium text-[#888085]">
+        <div className="hidden md:grid grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_140px_32px] items-center px-6 py-2 text-xs font-medium text-[#888085]">
           <div>Название</div>
           <div>Статус</div>
           <div className="text-right">Дата обновления</div>
+          <div />
         </div>
 
         <div className="flex flex-col gap-3">
           {pagedCases.map((c) => {
             const date = new Date(c.updated_at).toLocaleDateString("ru-RU");
             return (
-              <button
+              <div
                 key={c.id}
-                type="button"
-                onClick={() =>
-                  navigate(HK_ROUTES.private.CASES.FOLLOW_UP_VALUE(c.id))
-                }
+                role="button"
+                tabIndex={0}
+                onClick={() => {
+                  console.log(c);
+
+                  navigate(
+                    c.status === "draft"
+                      ? HK_ROUTES.private.ARTIFACTS.CLIENT.BASE_VALUE(c.id)
+                      : c.status === "in_progress" ||
+                        c.status === "ready_for_documents"
+                      ? HK_ROUTES.private.CASES.CLIENT.FOLLOW_UP_VALUE(c.id)
+                      : HK_ROUTES.private.ARTIFACTS.CLIENT.GENERATED_VALUE(c.id)
+                  );
+                }}
                 className="w-full cursor-pointer text-left rounded-lg bg-card px-6 py-5 shadow-[0_4px_4px_rgba(0,0,0,0.06)] hover:shadow-[0_6px_8px_rgba(0,0,0,0.08)] transition-shadow"
               >
-                <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_140px] gap-3 items-center">
+                <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_140px_32px] gap-3 items-center">
                   <div className="text-sm md:text-base font-normal text-foreground">
                     {c.title}
                   </div>
+
                   <div>
                     <StatusPill status={c.status} />
                   </div>
+
                   <div className="text-xs md:text-sm text-gray-500 md:text-right">
                     {date}
                   </div>
+
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openDeleteDialog(c);
+                      }}
+                      className="rounded-full p-1 text-[#888085] hover:bg-[#F0F2F5]"
+                    >
+                      <span className="material-symbols-outlined text-lg">
+                        more_vert
+                      </span>
+                    </button>
+                  </div>
                 </div>
-              </button>
+              </div>
             );
           })}
 
@@ -174,6 +240,42 @@ export function CaseListTable({ cases }: Props) {
 
         <CasesPagination totalItems={filteredCases.length} />
       </div>
+
+      <AlertDialog
+        open={deleteDialogOpen}
+        onOpenChange={(open) => {
+          setDeleteDialogOpen(open);
+          if (!open) setCaseToDelete(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Удалить кейс?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {caseToDelete
+                ? `Кейс «${caseToDelete.title}» будет безвозвратно удалён.`
+                : "Кейс будет безвозвратно удалён."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
+              Отмена
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Удаляем…" : "Удалить"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

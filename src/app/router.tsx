@@ -30,26 +30,40 @@ export function AppRouter() {
         <Route element={<RequireAuth />}>
           <Route
             path="/"
-            element={<Navigate to={HK_ROUTES.private.CASES.BASE} replace />}
-          />
-          <Route path={HK_ROUTES.private.CASES.BASE} element={<CasesPage />} />
-          <Route path="/cases/new/*" element={<NewCase />} />
-          <Route
-            path={HK_ROUTES.private.CASES.FOLLOW_UP}
-            element={<FollowupChat />}
+            element={
+              <Navigate to={HK_ROUTES.private.CASES.SHARED.BASE} replace />
+            }
           />
           <Route
-            path={HK_ROUTES.private.CASES.EDIT_INITIAL}
-            element={<EditCaseInitialStep />}
+            path={HK_ROUTES.private.CASES.SHARED.BASE}
+            element={<CasesPage />}
           />
 
           <Route
-            path={HK_ROUTES.private.ARTIFACTS.GENERATED}
+            path="*"
+            element={
+              <Navigate to={HK_ROUTES.private.CASES.SHARED.BASE} replace />
+            }
+          />
+        </Route>
+
+        <Route element={<RequireAuth allowedRoles={["CLIENT"]} />}>
+          <Route
+            path={HK_ROUTES.private.ARTIFACTS.CLIENT.GENERATED}
             element={<GeneratedArtifactsListPage />}
           />
           <Route
-            path={HK_ROUTES.private.ARTIFACTS.DETAILED}
+            path={HK_ROUTES.private.ARTIFACTS.CLIENT.DETAILED}
             element={<GeneratedArtifactDetailPage />}
+          />
+          <Route
+            path={HK_ROUTES.private.CASES.CLIENT.EDIT_INITIAL}
+            element={<EditCaseInitialStep />}
+          />
+          <Route path="/client/cases/new/*" element={<NewCase />} />
+          <Route
+            path={HK_ROUTES.private.CASES.CLIENT.FOLLOW_UP}
+            element={<FollowupChat />}
           />
         </Route>
       </Route>
