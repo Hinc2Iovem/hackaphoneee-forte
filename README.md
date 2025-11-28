@@ -106,6 +106,7 @@ This is a **React + Vite + TypeScript** single-page application.
 
 - **Bun** ≥ 1.x (recommended)
 - Backend API running and accessible (see `VITE_API_BASE_URL`)
+- Backend API running and accessible (see `VITE_API_AUTH_URL`)
 
 ### 1. Install dependencies
 
