@@ -113,6 +113,8 @@ This is a **React + Vite + TypeScript** single-page application.
 bun install
 ```
 
-# Dev-сервер (hot reload)
+### 2. Dev-сервер (hot reload)
 
+```bash
 bun run dev
+```

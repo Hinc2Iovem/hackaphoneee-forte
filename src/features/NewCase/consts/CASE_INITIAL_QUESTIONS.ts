@@ -208,3 +208,10 @@ export const ARTIFACT_META: Record<
   erd: { icon: "schema", label: "ERD" },
   state_diagram: { icon: "change_circle", label: "State Diagram" },
 };
+
+export const AVAILABLE_ARTIFACT_CODES = new Set<Artifact["code"]>([
+  "vision",
+  "scope",
+  "bpmn",
+  "context_diagram",
+]);

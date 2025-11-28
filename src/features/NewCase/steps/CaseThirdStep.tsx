@@ -14,7 +14,11 @@ import {
 } from "@/components/ui/tooltip";
 import type { CaseInitialAnswers } from "./CaseInitialStep";
 import ArtifactsSpinner from "../components/ArtifactsLoading";
-import { ARTIFACTS, type Artifact } from "../consts/CASE_INITIAL_QUESTIONS";
+import {
+  ARTIFACTS,
+  AVAILABLE_ARTIFACT_CODES,
+  type Artifact,
+} from "../consts/CASE_INITIAL_QUESTIONS";
 import NewCaseHeader from "../components/NewCaseHeader";
 
 interface Props {
@@ -89,6 +93,8 @@ export function CaseThirdStep({ answers: answersProp, onFinished }: Props) {
   }, [hydrated, effectiveAnswers, selected, storageKey]);
 
   function toggle(code: string) {
+    if (!AVAILABLE_ARTIFACT_CODES.has(code as Artifact["code"])) return;
+
     setSelected((prev) =>
       prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]
     );
@@ -127,44 +133,63 @@ export function CaseThirdStep({ answers: answersProp, onFinished }: Props) {
   const diagramArtifacts = artifacts.filter((a) => a.group === "diagram");
 
   const renderArtifactCard = (a: Artifact) => {
-    const isActive = selected.includes(a.code);
+    const isAvailable = AVAILABLE_ARTIFACT_CODES.has(a.code);
+    const isActive = isAvailable && selected.includes(a.code);
 
+    const handleClick = () => {
+      if (!isAvailable) return;
+      toggle(a.code);
+    };
+
+    const handleKeyDown: React.KeyboardEventHandler<HTMLDivElement> = (e) => {
+      if (!isAvailable) return;
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        toggle(a.code);
+      }
+    };
     return (
       <div
         key={a.code}
         role="button"
         tabIndex={0}
-        onClick={() => toggle(a.code)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            toggle(a.code);
-          }
-        }}
-        className={`flex h-[120px] flex-col justify-between rounded-2xl border px-4 py-3 text-left shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-colors cursor-pointer ${
-          isActive
-            ? "border-[#A31551] bg-[#FFE6EE]"
-            : "border-[#F1EFF4] bg-white hover:border-[#A31551]/50"
-        }`}
+        aria-disabled={!isAvailable}
+        onClick={handleClick}
+        onKeyDown={handleKeyDown}
+        className={`flex h-[120px] flex-col justify-between rounded-2xl border px-4 py-3 text-left shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-colors
+          ${
+            isAvailable
+              ? isActive
+                ? "border-[#A31551] bg-[#FFE6EE] cursor-pointer"
+                : "border-[#F1EFF4] bg-white hover:border-[#A31551]/50 cursor-pointer"
+              : "border-[#E3E1E8] bg-[#F7F6F8] opacity-60 cursor-not-allowed"
+          }`}
       >
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-start gap-2">
             <div
               className={`mt-0.5 flex h-7 w-7 items-center justify-center rounded-md ${
-                isActive ? "bg-[#A31551]" : "bg-[#F1EFF4]"
+                isAvailable && isActive ? "bg-[#A31551]" : "bg-[#F1EFF4]"
               }`}
             >
               <span
                 className={`material-symbols-outlined text-[18px] leading-none ${
-                  isActive ? "text-white" : "text-[#A31551]"
+                  isAvailable && isActive ? "text-white" : "text-[#A31551]"
                 }`}
               >
                 {a.icon}
               </span>
             </div>
-            <p className="text-sm font-semibold text-[#1B1B1F] leading-snug">
-              {a.label}
-            </p>
+            <div className="flex flex-col gap-1">
+              <p className="text-sm font-semibold text-[#1B1B1F] leading-snug">
+                {a.label}
+              </p>
+              {!isAvailable && (
+                <span className="inline-flex w-fit rounded-full bg-[#E3E1E8] px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-[#888085]">
+                  Скоро
+                </span>
+              )}
+            </div>
           </div>
 
           <Tooltip>
@@ -191,12 +216,12 @@ export function CaseThirdStep({ answers: answersProp, onFinished }: Props) {
         <div className="flex justify-end">
           <div
             className={`flex size-6 items-center justify-center rounded-md border-2 ${
-              isActive
+              isAvailable && isActive
                 ? "border-[#A31551] bg-[#A31551] text-white"
                 : "border-[#E3E1E8] bg-white"
             }`}
           >
-            {isActive && (
+            {isAvailable && isActive && (
               <span className="material-symbols-outlined text-[18px] leading-none">
                 check
               </span>
