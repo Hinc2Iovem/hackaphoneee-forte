@@ -13,6 +13,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import useReviewDocument from "../Cases/hooks/useReviewDocument";
 import useUploadDocx from "../Cases/hooks/useUploadDocx";
 import useLlmEditDocument from "../Cases/hooks/useLlmEditDocument";
+import { useQueryClient } from "@tanstack/react-query";
+import { casesQK } from "@/features/Cases/hooks/casesQueryKeys";
 
 type GeneratedDocumentFile = EnsureDocumentsResponse["files"][number];
 
@@ -68,6 +70,7 @@ export function AnalyticGeneratedArtifactDetailPage() {
     caseId: string;
     artifactId: string;
   }>();
+  const queryClient = useQueryClient();
 
   const { data: caseDetail, refetch: caseDetailsRefetch } =
     useGetCaseDetail(caseId);
@@ -105,6 +108,7 @@ export function AnalyticGeneratedArtifactDetailPage() {
           : "Статус документа обновлён"
       );
       await handleAfterMutation();
+      queryClient.invalidateQueries({ queryKey: casesQK.all });
     } catch (e) {
       console.error(e);
       toastError("Не удалось обновить статус документа");

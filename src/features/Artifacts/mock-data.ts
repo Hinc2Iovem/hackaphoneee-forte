@@ -25,6 +25,8 @@ export const MOCK_CASE: CaseDetailTypes = {
   selected_document_types: ["brd", "uml_use_case_diagram", "user_stories"],
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
+  confluence_space_key: "",
+  confluence_space_name: "",
   followup_questions: [],
 };
 

@@ -1,17 +1,16 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { toastError, toastSuccess } from "@/components/shared/toasts";
 import { Button } from "@/components/ui/button";
+import { HK_ROUTES } from "@/consts/HK_ROUTES";
+import type { DocumentStatusVariation } from "@/features/Artifacts/mock-data";
 import { useGetCaseDetail } from "@/features/Cases/hooks/useGetCaseDetail";
 import {
   useEnsureCaseDocuments,
   type EnsureDocumentsResponse,
 } from "@/features/Cases/hooks/useGetCaseDocuments";
-import type { DocumentStatusVariation } from "@/features/Artifacts/mock-data";
+import useLlmEditDocument from "@/features/Cases/hooks/useLlmEditDocument";
 import ArtifactsSpinner from "@/features/NewCase/components/ArtifactsLoading";
-import { HK_ROUTES } from "@/consts/HK_ROUTES";
-import { toastError, toastSuccess } from "@/components/shared/toasts";
-import useReviewDocument from "@/features/Cases/hooks/useReviewDocument";
-import { useState } from "react"; // NEW
-import useLlmEditDocument from "@/features/Cases/hooks/useLlmEditDocument"; // NEW
+import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 type GeneratedDocumentFile = EnsureDocumentsResponse["files"][number];
 
@@ -74,40 +73,14 @@ export function GeneratedArtifactDetailPage() {
   const artifacts = data?.files ?? [];
   const selected: GeneratedDocumentFile | undefined =
     artifacts.find((a) => a.id === artifactId) ?? artifacts[0];
-
-  const reviewMutation = useReviewDocument(selected?.id);
-  const llmEditMutation = useLlmEditDocument(); // NEW
-  const [instructions, setInstructions] = useState(""); // NEW
+  const llmEditMutation = useLlmEditDocument();
+  const [instructions, setInstructions] = useState("");
 
   const handleSelectFromSidebar = (id: string) => {
     if (!caseId) return;
     navigate(HK_ROUTES.private.ARTIFACTS.CLIENT.DETAILED_VALUE(caseId, id));
   };
 
-  const handleAfterMutation = async () => {
-    await refetch();
-  };
-
-  const handleReview = async (status: DocumentStatusVariation) => {
-    if (!selected?.id) return;
-
-    try {
-      await reviewMutation.mutateAsync(status);
-      toastSuccess(
-        status === "approved_by_ba"
-          ? "Документ принят"
-          : status === "rejected_by_ba"
-          ? "Документ отклонён"
-          : "Статус документа обновлён"
-      );
-      await handleAfterMutation();
-    } catch (e) {
-      console.error(e);
-      toastError("Не удалось обновить статус документа");
-    }
-  };
-
-  // NEW: handler for LLM edit
   const handleLlmEdit = async () => {
     if (!selected?.id || !instructions.trim()) return;
 

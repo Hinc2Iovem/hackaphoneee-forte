@@ -3,7 +3,6 @@ import { ARTIFACT_META } from "../consts/CASE_INITIAL_QUESTIONS";
 
 export default function ArtifactsSidebar({
   caseDetail,
-  dataSufficiencyPercent,
   onEditArtifacts,
 }: {
   caseDetail: CaseDetailTypes | undefined;
