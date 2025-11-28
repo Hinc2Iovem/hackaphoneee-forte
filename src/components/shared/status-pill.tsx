@@ -1,8 +1,10 @@
 import { cn } from "@/lib/utils";
 import type { CaseStatusVariation } from "@/types/CaseTypes";
 
+type VisibleStatus = Exclude<CaseStatusVariation, "ready_for_documents">;
+
 const mapStatus: Record<
-  CaseStatusVariation,
+  VisibleStatus,
   { label: string; bg: string; dot: string }
 > = {
   draft: {
@@ -15,12 +17,12 @@ const mapStatus: Record<
     bg: "bg-status-in-progress-soft text-status-in-progress",
     dot: "bg-status-in-progress",
   },
-  ready_for_documents: {
+  documents_generated: {
     label: "Ждёт ВА",
     bg: "bg-status-waiting-ba-soft text-status-waiting-ba",
     dot: "bg-status-waiting-ba",
   },
-  documents_generated: {
+  approved: {
     label: "Опубликован",
     bg: "bg-status-published-soft text-status-published",
     dot: "bg-status-published",
@@ -28,7 +30,10 @@ const mapStatus: Record<
 };
 
 export function StatusPill({ status }: { status: CaseStatusVariation }) {
-  const cfg = mapStatus[status];
+  const key: VisibleStatus =
+    status === "ready_for_documents" ? "documents_generated" : status;
+
+  const cfg = mapStatus[key];
 
   return (
     <div

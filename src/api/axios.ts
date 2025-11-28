@@ -66,19 +66,29 @@ axiosCustomized.interceptors.response.use(
     const originalRequest = error.config as
       | (InternalAxiosRequestConfig & { _retry?: boolean })
       | undefined;
-    const status = error.response?.status;
 
-    if (!originalRequest) return Promise.reject(error);
+    if (!originalRequest) {
+      return Promise.reject(error);
+    }
+
+    const status = error.response?.status;
 
     const isAuthCall =
       originalRequest.baseURL?.startsWith(`${AUTH_URL}`) ||
       originalRequest.url?.startsWith("/auth");
 
-    if (status !== 401 || originalRequest._retry || isAuthCall) {
+    const shouldAttemptRefresh =
+      !isAuthCall &&
+      !originalRequest._retry &&
+      (status === 401 || status === 403);
+
+    if (!shouldAttemptRefresh) {
       return Promise.reject(error);
     }
 
-    if (!refreshToken) return Promise.reject(error);
+    if (!refreshToken) {
+      return Promise.reject(error);
+    }
 
     if (!refreshPromise) {
       refreshPromise = (async () => {
@@ -105,9 +115,11 @@ axiosCustomized.interceptors.response.use(
 
     try {
       const newAccess = await refreshPromise;
+
       originalRequest._retry = true;
       originalRequest.headers = originalRequest.headers ?? {};
       originalRequest.headers.Authorization = `Bearer ${newAccess}`;
+
       return axiosCustomized(originalRequest);
     } catch (e) {
       return Promise.reject(e);

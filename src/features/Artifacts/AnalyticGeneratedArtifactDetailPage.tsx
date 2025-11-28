@@ -12,6 +12,7 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import useReviewDocument from "../Cases/hooks/useReviewDocument";
 import useUploadDocx from "../Cases/hooks/useUploadDocx";
+import useLlmEditDocument from "../Cases/hooks/useLlmEditDocument";
 
 type GeneratedDocumentFile = EnsureDocumentsResponse["files"][number];
 
@@ -45,6 +46,22 @@ function StatusPill({ status }: { status: DocumentStatusVariation }) {
   );
 }
 
+function normalizeUrl(url?: string | null) {
+  if (!url) return "";
+  return url.split("?")[0].split("#")[0].toLowerCase();
+}
+
+function isImageUrl(url?: string | null) {
+  const clean = normalizeUrl(url);
+
+  return /\.(png|jpe?g|gif|webp|avif|svg|bmp|tiff?|heic|ico)$/i.test(clean);
+}
+
+function isDocFileUrl(url?: string | null) {
+  const clean = normalizeUrl(url);
+  return /\.(docx?|pdf)$/i.test(clean);
+}
+
 export function AnalyticGeneratedArtifactDetailPage() {
   const navigate = useNavigate();
   const { caseId, artifactId } = useParams<{
@@ -52,7 +69,8 @@ export function AnalyticGeneratedArtifactDetailPage() {
     artifactId: string;
   }>();
 
-  const { data: caseDetail } = useGetCaseDetail(caseId);
+  const { data: caseDetail, refetch: caseDetailsRefetch } =
+    useGetCaseDetail(caseId);
   const { data, isLoading, isError, refetch } = useEnsureCaseDocuments(caseId);
 
   const artifacts = data?.files ?? [];
@@ -60,9 +78,11 @@ export function AnalyticGeneratedArtifactDetailPage() {
     artifacts.find((a) => a.id === artifactId) ?? artifacts[0];
 
   const [uploadingFile, setUploadingFile] = useState<File | null>(null);
+  const [instructions, setInstructions] = useState("");
 
   const reviewMutation = useReviewDocument(selected?.id);
   const uploadMutation = useUploadDocx(selected?.id);
+  const llmEditMutation = useLlmEditDocument();
 
   const handleSelectFromSidebar = (id: string) => {
     if (!caseId) return;
@@ -70,7 +90,7 @@ export function AnalyticGeneratedArtifactDetailPage() {
   };
 
   const handleAfterMutation = async () => {
-    await refetch();
+    await Promise.all([refetch(), caseDetailsRefetch()]);
   };
 
   const handleReview = async (status: DocumentStatusVariation) => {
@@ -106,6 +126,23 @@ export function AnalyticGeneratedArtifactDetailPage() {
     } catch (e) {
       console.error(e);
       toastError("Не удалось загрузить файл");
+    }
+  };
+
+  const handleLlmEdit = async () => {
+    if (!selected?.id || !instructions.trim()) return;
+
+    try {
+      await llmEditMutation.mutateAsync({
+        documentId: selected.id,
+        instructions: instructions.trim(),
+      });
+      toastSuccess("Документ обновлён с помощью AI");
+      setInstructions("");
+      await handleAfterMutation();
+    } catch (e) {
+      console.error(e);
+      toastError("Не удалось отредактировать документ");
     }
   };
 
@@ -149,6 +186,20 @@ export function AnalyticGeneratedArtifactDetailPage() {
       </div>
     );
   }
+
+  const hasDiagramField = !!selected.diagram_url;
+  const docxIsImage = isImageUrl(selected.docx_url);
+  const docxIsDocFile = isDocFileUrl(selected.docx_url);
+
+  const hasImage = hasDiagramField || docxIsImage;
+  const imageUrl =
+    selected.diagram_url || (docxIsImage ? selected.docx_url! : undefined);
+
+  const hasDocFile = !!selected.docx_url && docxIsDocFile;
+
+  const canLlmEdit =
+    selected.doc_type === "vision" || selected.doc_type === "scope";
+  const isBusy = llmEditMutation.isPending;
 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-[#F7F6F8]">
@@ -211,7 +262,15 @@ export function AnalyticGeneratedArtifactDetailPage() {
             </div>
           </aside>
 
-          <section className="rounded-2xl bg-white p-5 md:p-6 shadow-[0_2px_12px_rgba(0,0,0,0.06)] flex flex-col">
+          <section className="relative rounded-2xl bg-white p-5 md:p-6 shadow-[0_2px_12px_rgba(0,0,0,0.06)] flex flex-col">
+            {isBusy && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 backdrop-blur-sm">
+                <div className="max-w-xs w-full">
+                  <ArtifactsSpinner />
+                </div>
+              </div>
+            )}
+
             <header className="mb-4 flex items-start justify-between gap-3">
               <div className="space-y-1">
                 <h2 className="text-base md:text-lg font-semibold text-[#1B1B1F]">
@@ -221,39 +280,80 @@ export function AnalyticGeneratedArtifactDetailPage() {
               </div>
             </header>
 
-            <div className="flex-1 flex flex-col items-center justify-center rounded-xl border border-[#E3E1E8] bg-[#F7F6F8] px-4 py-6 text-center">
-              <p className="text-sm text-[#55505A]">
-                Предпросмотр DOCX в браузере недоступен.
-              </p>
-              <p className="mt-1 text-xs text-[#888085]">
-                Скачайте файл, чтобы открыть его в Word, Google Docs или другом
-                редакторе документов.
-              </p>
-            </div>
+            {hasImage && !hasDocFile && imageUrl ? (
+              <div className="flex-1 flex items-center justify-center rounded-xl border border-[#E3E1E8] bg-[#F7F6F8] px-4 py-6">
+                <img
+                  src={imageUrl}
+                  alt={selected.title}
+                  className="max-h-[520px] w-full rounded-lg bg-white object-contain"
+                />
+              </div>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center rounded-xl border border-[#E3E1E8] bg-[#F7F6F8] px-4 py-6 text-center">
+                <p className="text-sm text-[#55505A]">
+                  Предпросмотр файла в браузере недоступен.
+                </p>
+                <p className="mt-1 text-xs text-[#888085]">
+                  Скачайте файл, чтобы открыть его в Word, Google Docs,
+                  PDF-читалке или другом редакторе.
+                </p>
+              </div>
+            )}
 
             <div className="mt-4 flex flex-wrap items-center gap-3">
-              <a
-                href={selected.docx_url || ""}
-                download
-                className="inline-flex cursor-pointer items-center justify-center rounded-lg bg-[#A31551] px-4 py-2 text-xs font-semibold text-white hover:bg-[#8F1246]"
-              >
-                <span className="material-symbols-outlined mr-1 text-sm">
-                  download
-                </span>
-                <span>Скачать DOCX</span>
-              </a>
+              {hasDocFile && selected.docx_url && (
+                <>
+                  <a
+                    href={selected.docx_url}
+                    download
+                    className="inline-flex cursor-pointer items-center justify-center rounded-lg bg-[#A31551] px-4 py-2 text-xs font-semibold text-white hover:bg-[#8F1246]"
+                  >
+                    <span className="material-symbols-outlined mr-1 text-sm">
+                      download
+                    </span>
+                    <span>Скачать файл</span>
+                  </a>
 
-              <a
-                href={selected.docx_url || ""}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-[#E3E1E8] bg-white px-3 py-2 text-xs font-medium text-[#55505A] hover:bg-[#F7F6F8]"
-              >
-                <span className="material-symbols-outlined mr-1 text-sm">
-                  open_in_new
-                </span>
-                <span>Открыть в новой вкладке</span>
-              </a>
+                  <a
+                    href={selected.docx_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-[#E3E1E8] bg-white px-3 py-2 text-xs font-medium text-[#55505A] hover:bg-[#F7F6F8]"
+                  >
+                    <span className="material-symbols-outlined mr-1 text-sm">
+                      open_in_new
+                    </span>
+                    <span>Открыть в новой вкладке</span>
+                  </a>
+                </>
+              )}
+
+              {hasImage && imageUrl && (
+                <>
+                  <a
+                    href={imageUrl}
+                    download
+                    className="inline-flex cursor-pointer items-center justify-center rounded-lg bg-[#A31551] px-4 py-2 text-xs font-semibold text-white hover:bg-[#8F1246]"
+                  >
+                    <span className="material-symbols-outlined mr-1 text-sm">
+                      download
+                    </span>
+                    <span>Скачать диаграмму</span>
+                  </a>
+
+                  <a
+                    href={imageUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-[#E3E1E8] bg-white px-3 py-2 text-xs font-medium text-[#55505A] hover:bg-[#F7F6F8]"
+                  >
+                    <span className="material-symbols-outlined mr-1 text-sm">
+                      open_in_new
+                    </span>
+                    <span>Открыть диаграмму</span>
+                  </a>
+                </>
+              )}
             </div>
           </section>
 
@@ -264,7 +364,7 @@ export function AnalyticGeneratedArtifactDetailPage() {
                 variant="outline"
                 onClick={() => handleReview("rejected_by_ba")}
                 disabled={reviewMutation.isPending}
-                className="h-10 rounded-lg border border-rose-200 cursor-pointer bg-rose-50 text-xs font-semibold text-rose-700 hover:bg-rose-100"
+                className="h-10 rounded-lg border border-rose-200 cursor-pointer bg-rose-50 text-xs font-semibold text-rose-700 hover:bg-rose-100 disabled:opacity-60"
               >
                 Не принимать
               </Button>
@@ -273,19 +373,70 @@ export function AnalyticGeneratedArtifactDetailPage() {
                 type="button"
                 onClick={() => handleReview("approved_by_ba")}
                 disabled={reviewMutation.isPending}
-                className="h-10 rounded-lg bg-emerald-600 cursor-pointer text-xs font-semibold text-white hover:bg-emerald-700"
+                className="h-10 rounded-lg bg-emerald-600 cursor-pointer text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
               >
                 Принять
               </Button>
             </div>
 
+            <div className="rounded-2xl bg-white p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-[#E3E1E8]">
+              <p className="text-xs font-semibold text-[#1B1B1F] mb-1">
+                Правки через AI
+              </p>
+              <p className="text-[11px] text-[#888085] mb-2">
+                Сейчас поддерживаются только типы документов{" "}
+                <span className="font-mono text-[10px]">vision</span> и{" "}
+                <span className="font-mono text-[10px]">scope</span>.
+              </p>
+
+              {canLlmEdit ? (
+                <>
+                  <p className="mb-2 flex items-start gap-1 text-[11px] text-[#C05621]">
+                    <span className="material-symbols-outlined text-[14px] leading-4">
+                      warning
+                    </span>
+                    <span>
+                      После применения правок текущий файл будет{" "}
+                      <span className="font-semibold">
+                        безвозвратно перезаписан
+                      </span>
+                      . Отменить изменения через интерфейс будет нельзя.
+                    </span>
+                  </p>
+
+                  <textarea
+                    className="w-full mb-2 min-h-[200px] rounded-md border border-[#E3E1E8] bg-white px-2 py-1 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                    rows={4}
+                    placeholder='Например: "Сделай формулировки более формальными и добавь раздел про риски внедрения"'
+                    value={instructions}
+                    onChange={(e) => setInstructions(e.target.value)}
+                  />
+
+                  <Button
+                    type="button"
+                    onClick={handleLlmEdit}
+                    disabled={!instructions.trim() || llmEditMutation.isPending}
+                    className="h-9 w-full rounded-lg cursor-pointer text-xs font-semibold"
+                  >
+                    {llmEditMutation.isPending
+                      ? "Применяем правки…"
+                      : "Отправить правки"}
+                  </Button>
+                </>
+              ) : (
+                <p className="mt-1 text-[11px] text-[#B0A8B4]">
+                  Для этого типа документа AI-редактирование пока недоступно.
+                </p>
+              )}
+            </div>
+
             <div className="rounded-2xl bg-white p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
               <h3 className="mb-1 text-sm font-semibold text-[#1B1B1F]">
-                Заменить документ вручную
+                Заменить артефакт вручную
               </h3>
               <p className="mb-3 text-xs text-[#888085]">
-                Загрузите свою версию файла (DOCX / PDF), чтобы заменить
-                сгенерированный документ.
+                Загрузите свою версию файла (DOCX / PDF / PNG / JPG), чтобы
+                заменить сгенерированный документ или диаграмму.
               </p>
 
               <div className="mb-2 text-[11px] text-[#888085]">
@@ -299,7 +450,7 @@ export function AnalyticGeneratedArtifactDetailPage() {
                 <span>Загрузить новый файл</span>
                 <input
                   type="file"
-                  accept=".doc,.docx,.pdf"
+                  accept=".doc,.docx,.pdf,.png,.jpg,.jpeg,.gif,.webp"
                   className="hidden"
                   onChange={handleFileChange}
                 />

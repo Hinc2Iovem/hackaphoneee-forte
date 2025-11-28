@@ -10,6 +10,8 @@ import ArtifactsSpinner from "@/features/NewCase/components/ArtifactsLoading";
 import { HK_ROUTES } from "@/consts/HK_ROUTES";
 import { toastError, toastSuccess } from "@/components/shared/toasts";
 import useReviewDocument from "@/features/Cases/hooks/useReviewDocument";
+import { useState } from "react"; // NEW
+import useLlmEditDocument from "@/features/Cases/hooks/useLlmEditDocument"; // NEW
 
 type GeneratedDocumentFile = EnsureDocumentsResponse["files"][number];
 
@@ -43,6 +45,22 @@ function StatusPill({ status }: { status: DocumentStatusVariation }) {
   );
 }
 
+function normalizeUrl(url?: string | null) {
+  if (!url) return "";
+  return url.split("?")[0].split("#")[0].toLowerCase();
+}
+
+function isImageUrl(url?: string | null) {
+  const clean = normalizeUrl(url);
+
+  return /\.(png|jpe?g|gif|webp|avif|svg|bmp|tiff?|heic|ico)$/i.test(clean);
+}
+
+function isDocFileUrl(url?: string | null) {
+  const clean = normalizeUrl(url);
+  return /\.(docx?|pdf)$/i.test(clean);
+}
+
 export function GeneratedArtifactDetailPage() {
   const navigate = useNavigate();
   const { caseId, artifactId } = useParams<{
@@ -58,6 +76,8 @@ export function GeneratedArtifactDetailPage() {
     artifacts.find((a) => a.id === artifactId) ?? artifacts[0];
 
   const reviewMutation = useReviewDocument(selected?.id);
+  const llmEditMutation = useLlmEditDocument(); // NEW
+  const [instructions, setInstructions] = useState(""); // NEW
 
   const handleSelectFromSidebar = (id: string) => {
     if (!caseId) return;
@@ -84,6 +104,24 @@ export function GeneratedArtifactDetailPage() {
     } catch (e) {
       console.error(e);
       toastError("Не удалось обновить статус документа");
+    }
+  };
+
+  // NEW: handler for LLM edit
+  const handleLlmEdit = async () => {
+    if (!selected?.id || !instructions.trim()) return;
+
+    try {
+      await llmEditMutation.mutateAsync({
+        documentId: selected.id,
+        instructions: instructions.trim(),
+      });
+      toastSuccess("Документ обновлён с помощью AI");
+      setInstructions("");
+      await refetch();
+    } catch (e) {
+      console.error(e);
+      toastError("Не удалось отредактировать документ");
     }
   };
 
@@ -125,8 +163,20 @@ export function GeneratedArtifactDetailPage() {
     );
   }
 
-  const hasDocx = !!selected.docx_url;
-  const hasDiagram = !!selected.diagram_url;
+  const hasDiagramField = !!selected.diagram_url;
+  const docxIsImage = isImageUrl(selected.docx_url);
+  const docxIsDocFile = isDocFileUrl(selected.docx_url);
+
+  const hasImage = hasDiagramField || docxIsImage;
+  const imageUrl =
+    selected.diagram_url || (docxIsImage ? selected.docx_url! : undefined);
+
+  const hasDocFile = !!selected.docx_url && docxIsDocFile;
+
+  const canLlmEdit =
+    selected.doc_type === "vision" || selected.doc_type === "scope";
+
+  const isBusy = llmEditMutation.isPending;
 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-[#F7F6F8]">
@@ -153,7 +203,7 @@ export function GeneratedArtifactDetailPage() {
           <p className="text-xs text-[#888085]">Просмотр артефактов</p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-[260px,minmax(0,1fr),160px]">
+        <div className="grid gap-6 md:grid-cols-[260px,minmax(0,1fr),260px]">
           <aside className="rounded-2xl bg-white p-3 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
             <div className="mb-3 px-2 text-xs font-semibold text-[#888085]">
               Список артефактов
@@ -184,7 +234,15 @@ export function GeneratedArtifactDetailPage() {
             </div>
           </aside>
 
-          <section className="rounded-2xl bg-white p-5 md:p-6 shadow-[0_2px_12px_rgba(0,0,0,0.06)] flex flex-col">
+          <section className="relative rounded-2xl bg-white p-5 md:p-6 shadow-[0_2px_12px_rgba(0,0,0,0.06)] flex flex-col">
+            {isBusy && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 backdrop-blur-sm">
+                <div className="max-w-xs w-full">
+                  <ArtifactsSpinner />
+                </div>
+              </div>
+            )}
+
             <header className="mb-4 flex items-start justify-between gap-3">
               <div className="space-y-1">
                 <h2 className="text-base md:text-lg font-semibold text-[#1B1B1F]">
@@ -194,10 +252,10 @@ export function GeneratedArtifactDetailPage() {
               </div>
             </header>
 
-            {hasDiagram && !hasDocx ? (
+            {hasImage && !hasDocFile && imageUrl ? (
               <div className="flex-1 flex items-center justify-center rounded-xl border border-[#E3E1E8] bg-[#F7F6F8] px-4 py-6">
                 <img
-                  src={selected.diagram_url!}
+                  src={imageUrl}
                   alt={selected.title}
                   className="max-h-[520px] w-full rounded-lg bg-white object-contain"
                 />
@@ -205,31 +263,31 @@ export function GeneratedArtifactDetailPage() {
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center rounded-xl border border-[#E3E1E8] bg-[#F7F6F8] px-4 py-6 text-center">
                 <p className="text-sm text-[#55505A]">
-                  Предпросмотр DOCX в браузере недоступен.
+                  Предпросмотр файла в браузере недоступен.
                 </p>
                 <p className="mt-1 text-xs text-[#888085]">
-                  Скачайте файл, чтобы открыть его в Word, Google Docs или
-                  другом редакторе документов.
+                  Скачайте файл, чтобы открыть его в Word, Google Docs,
+                  PDF-читалке или другом редакторе.
                 </p>
               </div>
             )}
 
             <div className="mt-4 flex flex-wrap items-center gap-3">
-              {hasDocx && (
+              {hasDocFile && selected.docx_url && (
                 <>
                   <a
-                    href={selected.docx_url!}
+                    href={selected.docx_url}
                     download
                     className="inline-flex cursor-pointer items-center justify-center rounded-lg bg-[#A31551] px-4 py-2 text-xs font-semibold text-white hover:bg-[#8F1246]"
                   >
                     <span className="material-symbols-outlined mr-1 text-sm">
                       download
                     </span>
-                    <span>Скачать DOCX</span>
+                    <span>Скачать файл</span>
                   </a>
 
                   <a
-                    href={selected.docx_url!}
+                    href={selected.docx_url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-[#E3E1E8] bg-white px-3 py-2 text-xs font-medium text-[#55505A] hover:bg-[#F7F6F8]"
@@ -242,10 +300,10 @@ export function GeneratedArtifactDetailPage() {
                 </>
               )}
 
-              {hasDiagram && (
+              {hasImage && imageUrl && (
                 <>
                   <a
-                    href={selected.diagram_url!}
+                    href={imageUrl}
                     download
                     className="inline-flex cursor-pointer items-center justify-center rounded-lg bg-[#A31551] px-4 py-2 text-xs font-semibold text-white hover:bg-[#8F1246]"
                   >
@@ -256,7 +314,7 @@ export function GeneratedArtifactDetailPage() {
                   </a>
 
                   <a
-                    href={selected.diagram_url!}
+                    href={imageUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-[#E3E1E8] bg-white px-3 py-2 text-xs font-medium text-[#55505A] hover:bg-[#F7F6F8]"
@@ -264,7 +322,7 @@ export function GeneratedArtifactDetailPage() {
                     <span className="material-symbols-outlined mr-1 text-sm">
                       open_in_new
                     </span>
-                    <span>Открыть в новой вкладке</span>
+                    <span>Открыть диаграмму</span>
                   </a>
                 </>
               )}
@@ -272,24 +330,56 @@ export function GeneratedArtifactDetailPage() {
           </section>
 
           <aside className="flex flex-col gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => handleReview("rejected_by_ba")}
-              disabled={reviewMutation.isPending}
-              className="h-10 rounded-lg border border-rose-200 cursor-pointer bg-rose-50 text-xs font-semibold text-rose-700 hover:bg-rose-100 disabled:opacity-60"
-            >
-              Не принимать
-            </Button>
+            <div className="mt-4 rounded-2xl bg-white p-3 shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-[#E3E1E8]">
+              <p className="text-xs font-semibold text-[#1B1B1F] mb-1">
+                Правки через AI
+              </p>
+              <p className="text-[11px] text-[#888085] mb-2">
+                Сейчас поддерживаются только типы документов{" "}
+                <span className="font-mono text-[10px]">vision</span> и{" "}
+                <span className="font-mono text-[10px]">scope</span>.
+              </p>
 
-            <Button
-              type="button"
-              onClick={() => handleReview("approved_by_ba")}
-              disabled={reviewMutation.isPending}
-              className="h-10 rounded-lg bg-emerald-600 cursor-pointer text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
-            >
-              Принять
-            </Button>
+              {canLlmEdit ? (
+                <>
+                  <p className="mb-2 flex items-start gap-1 text-[11px] text-[#C05621]">
+                    <span className="material-symbols-outlined text-[14px] leading-4">
+                      warning
+                    </span>
+                    <span>
+                      После применения правок текущий файл будет{" "}
+                      <span className="font-semibold">
+                        безвозвратно перезаписан
+                      </span>
+                      . Отменить изменения через интерфейс будет нельзя.
+                    </span>
+                  </p>
+
+                  <textarea
+                    className="w-full mb-2 min-h-[200px] rounded-md border border-[#E3E1E8] bg-white px-2 py-1 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                    rows={4}
+                    placeholder='Например: "Сделай формулировки более формальными и добавь раздел про риски внедрения"'
+                    value={instructions}
+                    onChange={(e) => setInstructions(e.target.value)}
+                  />
+
+                  <Button
+                    type="button"
+                    onClick={handleLlmEdit}
+                    disabled={!instructions.trim() || llmEditMutation.isPending}
+                    className="h-9 w-full rounded-lg cursor-pointer text-xs font-semibold"
+                  >
+                    {llmEditMutation.isPending
+                      ? "Применяем правки…"
+                      : "Отправить правки"}
+                  </Button>
+                </>
+              ) : (
+                <p className="mt-1 text-[11px] text-[#B0A8B4]">
+                  Для этого типа документа AI-редактирование пока недоступно.
+                </p>
+              )}
+            </div>
           </aside>
         </div>
       </div>

@@ -11,7 +11,7 @@ import {
 import { HK_ROUTES } from "@/consts/HK_ROUTES";
 import type { useGetCaseDetail } from "@/features/Cases/hooks/useGetCaseDetail";
 import type { useGetNextFollowupQuestion } from "@/features/Cases/hooks/useGetNextFollowUpQuestion";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useGenerateCaseDocuments } from "@/features/Cases/hooks/useGenerateCaseDocuments";
 import ArtifactsSpinner from "./ArtifactsLoading";
@@ -58,6 +58,8 @@ export default function ChatPanel({
   const { mutateAsync: generateDocuments, isPending: isGenerating } =
     useGenerateCaseDocuments(caseId);
 
+  const messagesRef = useRef<HTMLDivElement | null>(null);
+
   const canSend =
     !!nextQuestion?.question_id && !!answer.trim() && !isSubmitting;
 
@@ -102,15 +104,31 @@ export default function ChatPanel({
     }
   }
 
+  useEffect(() => {
+    if (!messagesRef.current) return;
+
+    messagesRef.current.scrollTo({
+      top: messagesRef.current.scrollHeight,
+      behavior: "smooth",
+    });
+  }, [
+    answeredFollowups.length,
+    nextQuestion?.question_id,
+    isCaseLoading,
+    isNextLoading,
+  ]);
+
   return (
     <>
       <section
         className="
+         relative
           flex-1 flex flex-col
+          min-h-0              
           bg-white dark:bg-[#2c282f]
           rounded-xl border border-gray-200 dark:border-gray-700
           overflow-hidden
-          h-[600px]             
+          h-[60vh] md:h-[600px]  
         "
       >
         {isGenerating && (
@@ -137,7 +155,13 @@ export default function ChatPanel({
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent">
+        <div
+          ref={messagesRef}
+          className="flex-1 min-h-0          
+            overflow-y-auto
+            p-6 space-y-6
+            scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent"
+        >
           {isCaseLoading ? (
             <div className="text-sm text-gray-500">Загружаем диалог…</div>
           ) : answeredFollowups.length === 0 && !nextQuestion ? (
@@ -250,6 +274,13 @@ export default function ChatPanel({
                   submitAnswer();
                 }
               }}
+              onFocus={() => {
+                if (!messagesRef.current) return;
+                messagesRef.current.scrollTo({
+                  top: messagesRef.current.scrollHeight,
+                  behavior: "smooth",
+                });
+              }}
             />
 
             <div className="flex items-center justify-between gap-3">
@@ -281,15 +312,13 @@ export default function ChatPanel({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Завершить диалог раньше?</DialogTitle>
-            <DialogDescription className="space-y-2">
-              <p>
-                Вы ответили не на все уточняющие вопросы. Это может привести к
-                тому, что часть документов будет менее точной или неполной.
-              </p>
-              <p>
-                Вы всё равно можете перейти к генерации артефактов — при
-                необходимости документы всегда можно доработать позже.
-              </p>
+            <DialogDescription className="space-y-2 text-sm text-muted-foreground">
+              Вы ответили не на все уточняющие вопросы. Это может привести к
+              тому, что часть документов будет менее точной или неполной.
+              <br />
+              <br />
+              Вы всё равно можете перейти к генерации артефактов — при
+              необходимости документы всегда можно доработать позже.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex gap-2 sm:justify-end">

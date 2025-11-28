@@ -28,8 +28,8 @@ const STATUS_FILTERS: { id: StatusFilter; label: string }[] = [
   { id: "all", label: "Все" },
   { id: "draft", label: "Новый" },
   { id: "in_progress", label: "В работе" },
-  { id: "ready_for_documents", label: "Ждёт ВА" },
-  { id: "documents_generated", label: "Опубликован" },
+  { id: "documents_generated", label: "Ждёт ВА" },
+  { id: "approved", label: "Опубликован" },
 ];
 
 export function CaseListTable({ cases }: Props) {

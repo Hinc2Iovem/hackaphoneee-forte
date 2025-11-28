@@ -96,6 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         queryClient.clear();
       } catch {}
     }
+    queryClient.clear();
     setUser(null);
     clearAuthTokens();
     clearAuthSession();

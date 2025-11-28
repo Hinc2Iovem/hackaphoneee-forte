@@ -2,7 +2,8 @@ export type CaseStatusVariation =
   | "draft"
   | "in_progress"
   | "ready_for_documents"
-  | "documents_generated";
+  | "documents_generated"
+  | "approved";
 
 export interface FollowupQuestionTypes {
   id: string;
@@ -23,6 +24,10 @@ export interface CaseDetailTypes {
   requester_name: string | null;
   initial_answers: Record<string, string> | null;
   selected_document_types: string[] | null;
+
+  confluence_space_key: string | null;
+  confluence_space_name: string | null;
+
   created_at: string;
   updated_at: string;
   followup_questions: FollowupQuestionTypes[];
@@ -33,6 +38,10 @@ export interface CaseSessionTypes {
   title: string;
   requester_name: string | null;
   status: CaseStatusVariation;
+
+  confluence_space_key: string | null;
+  confluence_space_name: string | null;
+
   created_at: string;
   updated_at: string;
 }
@@ -41,13 +50,19 @@ export interface CaseSessionTypes {
 export interface CaseSessionCreateRequest {
   title: string;
   requester_name?: string;
+  confluence_space_key?: string | null;
+  confluence_space_name?: string | null;
 }
+
 export type CaseSessionCreateResponse = CaseSessionTypes;
 
 /** PUT /cases/{id}/initial-answers/ */
 export interface CaseInitialAnswersPayload {
   initial_answers: Record<string, string>;
   selected_document_types: string[];
+
+  confluence_space_key?: string | null;
+  confluence_space_name?: string | null;
 }
 
 /** GET /cases/{id}/next-question/ */

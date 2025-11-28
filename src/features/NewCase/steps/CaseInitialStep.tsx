@@ -11,13 +11,34 @@ import { HK_ROUTES } from "@/consts/HK_ROUTES";
 import NewCaseHeader from "../components/NewCaseHeader";
 import { useQueryClient } from "@tanstack/react-query";
 import { casesQK } from "@/features/Cases/hooks/casesQueryKeys";
+import { useGetConfluenceSpaces } from "@/features/Cases/hooks/useGetConfluenceSpaces"; // 👈 НОВЫЙ хук
+import type { ConfluenceSpace } from "@/features/Cases/hooks/useGetConfluenceSpaces";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
 
 export type CaseInitialAnswers = Record<string, string>;
 
 interface Props {
   initialTitle?: string;
   initialAnswers?: CaseInitialAnswers;
-  onSaveLocal?: (data: { title: string; answers: CaseInitialAnswers }) => void;
+  onSaveLocal?: (data: {
+    title: string;
+    answers: CaseInitialAnswers;
+    confluence_space_key: string | null;
+    confluence_space_name: string | null;
+  }) => void;
 }
 
 const SS_KEY = "hk_new_case_step1";
@@ -25,6 +46,8 @@ const SS_KEY = "hk_new_case_step1";
 type Step1Draft = {
   title?: string;
   answers?: CaseInitialAnswers;
+  confluence_space_key?: string | null;
+  confluence_space_name?: string | null;
 };
 
 export function CaseInitialStep({
@@ -38,6 +61,14 @@ export function CaseInitialStep({
     initialAnswers ??
       Object.fromEntries(CASE_INITIAL_QUESTIONS.map((f) => [f.key, ""]))
   );
+  const [spacePopoverOpen, setSpacePopoverOpen] = useState(false);
+
+  const [selectedSpaceKey, setSelectedSpaceKey] = useState<string | null>(null);
+  const [selectedSpaceName, setSelectedSpaceName] = useState<string | null>(
+    null
+  );
+
+  const { data: spaces, isLoading: isSpacesLoading } = useGetConfluenceSpaces();
 
   const { mutateAsync: createCase, isPending: isCreating } = useCreateCase();
   const navigate = useNavigate();
@@ -63,6 +94,12 @@ export function CaseInitialStep({
       if (parsed.answers) {
         setAnswers((prev) => ({ ...prev, ...parsed.answers }));
       }
+      if (parsed.confluence_space_key) {
+        setSelectedSpaceKey(parsed.confluence_space_key);
+      }
+      if (parsed.confluence_space_name) {
+        setSelectedSpaceName(parsed.confluence_space_name);
+      }
     } catch (e) {
       console.warn("[CaseInitialStep] failed to read sessionStorage", e);
     } finally {
@@ -74,12 +111,20 @@ export function CaseInitialStep({
     if (!hydrated) return;
 
     try {
-      const payload: Step1Draft = { title, answers };
+      console.log("selectedSpaceKey: ", selectedSpaceKey);
+      console.log("selectedSpaceName: ", selectedSpaceName);
+
+      const payload: Step1Draft = {
+        title,
+        answers,
+        confluence_space_key: selectedSpaceKey,
+        confluence_space_name: selectedSpaceName,
+      };
       sessionStorage.setItem(SS_KEY, JSON.stringify(payload));
     } catch (e) {
       console.warn("[CaseInitialStep] failed to write sessionStorage", e);
     }
-  }, [hydrated, title, answers]);
+  }, [hydrated, title, answers, selectedSpaceKey, selectedSpaceName]);
 
   function updateField(key: string, value: string) {
     setAnswers((prev) => ({ ...prev, [key]: value }));
@@ -88,21 +133,36 @@ export function CaseInitialStep({
   const allQuestionsFilled = CASE_INITIAL_QUESTIONS.every((f) =>
     (answers[f.key] ?? "").trim()
   );
-  const canSubmit = !!title.trim() && allQuestionsFilled && !isCreating;
+  const canSubmit =
+    !!title.trim() && allQuestionsFilled && !isCreating && !!selectedSpaceKey;
 
   async function handleNext() {
     if (!canSubmit) return;
 
     const trimmedTitle = title.trim();
-    onSaveLocal?.({ title: trimmedTitle, answers });
 
-    const session = await createCase({ title: trimmedTitle });
-    queryClient.invalidateQueries({
-      queryKey: casesQK.all,
+    onSaveLocal?.({
+      title: trimmedTitle,
+      answers,
+      confluence_space_key: selectedSpaceKey ?? null,
+      confluence_space_name: selectedSpaceName ?? null,
     });
+
+    const session = await createCase({
+      title: trimmedTitle,
+      confluence_space_key: selectedSpaceKey ?? null,
+      confluence_space_name: selectedSpaceName ?? null,
+    });
+
+    queryClient.invalidateQueries({ queryKey: casesQK.all });
     sessionStorage.removeItem(SS_KEY);
 
     navigate(`/client/cases/new/${session.id}/artifacts`);
+  }
+
+  function handleSpaceClick(space: ConfluenceSpace) {
+    setSelectedSpaceKey(space.key);
+    setSelectedSpaceName(space.name);
   }
 
   return (
@@ -147,6 +207,106 @@ export function CaseInitialStep({
               />
             </div>
           ))}
+        </div>
+
+        <div className="mt-8 space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-lg font-semibold text-[#1B1B1F]">
+              Выберите нужный space в Confluence
+            </h2>
+            {isSpacesLoading && (
+              <span className="text-xs text-[#888085]">
+                Загружаем пространства…
+              </span>
+            )}
+          </div>
+
+          <p className="text-xs text-[#888085]">
+            Выберите пространство Confluence, в котором мы будем работать с
+            артефактами и документами.
+          </p>
+
+          <div className="mt-3 max-w-lg">
+            <Popover open={spacePopoverOpen} onOpenChange={setSpacePopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={spacePopoverOpen}
+                  className="w-full justify-between h-10 rounded-xl border-[#E3E1E8] bg-white text-sm"
+                  disabled={isSpacesLoading}
+                >
+                  {selectedSpaceName ? (
+                    <span className="truncate text-left">
+                      {selectedSpaceName}
+                      {selectedSpaceKey && (
+                        <span className="ml-2 text-[11px] font-mono text-[#888085]">
+                          ({selectedSpaceKey})
+                        </span>
+                      )}
+                    </span>
+                  ) : (
+                    <span className="text-[#B0A9B5]">
+                      Выберите пространство Confluence…
+                    </span>
+                  )}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+
+              <PopoverContent className="w-[320px] p-0">
+                <Command>
+                  <CommandInput placeholder="Поиск по названию или ключу…" />
+                  <CommandEmpty>Ничего не найдено.</CommandEmpty>
+
+                  <CommandGroup>
+                    {(spaces ?? []).map((space) => (
+                      <CommandItem
+                        key={space.key}
+                        value={`${space.name} ${space.key}`}
+                        className="flex items-start gap-2 py-2"
+                        onSelect={() => {
+                          handleSpaceClick(space);
+                          setSpacePopoverOpen(false);
+                        }}
+                      >
+                        <Check
+                          className={cn(
+                            "mt-0.5 h-4 w-4",
+                            space.key === selectedSpaceKey
+                              ? "opacity-100 text-[#A31551]"
+                              : "opacity-0"
+                          )}
+                        />
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">
+                            {space.name}
+                          </span>
+                          <span className="text-[11px] font-mono text-[#888085]">
+                            {space.key}
+                          </span>
+                        </div>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </Command>
+              </PopoverContent>
+            </Popover>
+
+            {selectedSpaceName && (
+              <p className="mt-1 text-[11px] text-[#888085]">
+                Вы выбрали:{" "}
+                <span className="font-semibold">{selectedSpaceName}</span>
+                {selectedSpaceKey && (
+                  <>
+                    {" "}
+                    (<span className="font-mono">{selectedSpaceKey}</span>)
+                  </>
+                )}
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
