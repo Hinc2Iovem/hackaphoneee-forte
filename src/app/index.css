@@ -290,3 +290,19 @@ body {
   }
 }
 /* toasts */
+
+input::selection,
+textarea::selection,
+input::-moz-selection,
+textarea::-moz-selection {
+  background-color: transparent;
+  color: inherit;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: black !important; /* Optional: to maintain text color */
+  transition: background-color 5000s ease-in-out 0s; /* Optional: to delay the autofill background change */
+}

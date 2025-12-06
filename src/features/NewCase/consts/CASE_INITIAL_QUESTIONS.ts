@@ -212,6 +212,7 @@ export const ARTIFACT_META: Record<
 export const AVAILABLE_ARTIFACT_CODES = new Set<Artifact["code"]>([
   "vision",
   "scope",
+  "uml_use_case_diagram",
   "bpmn",
   "context_diagram",
 ]);

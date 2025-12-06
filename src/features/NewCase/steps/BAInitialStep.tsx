@@ -46,7 +46,7 @@ export function BACaseBriefPage() {
         {isLoading ? (
           <div className="mt-10 flex justify-center">
             <div className="max-w-xs w-full">
-              <ArtifactsSpinner />
+              <ArtifactsSpinner title="Загрузка..." />
             </div>
           </div>
         ) : isError || !caseDetail ? (
@@ -55,13 +55,24 @@ export function BACaseBriefPage() {
           </p>
         ) : (
           <>
-            <div className="space-y-2 mt-4">
+            {/* Header with Confluence info */}
+            <div className="space-y-3 mt-4">
               <h1 className="text-2xl md:text-3xl font-semibold text-[#1B1B1F]">
                 {caseDetail.title}
               </h1>
-              <p className="text-sm text-[#888085]">
-                Бриф из {questionsCount} вопросов
-              </p>
+
+              <div className="flex flex-wrap items-center gap-2 text-sm text-[#888085]">
+                <span>Бриф из {questionsCount} вопросов</span>
+
+                {caseDetail.confluence_space_name && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[#F1EFF4] px-3 py-1 text-[11px] font-medium text-[#A31551]">
+                    <span className="material-symbols-outlined text-sm">
+                      hub
+                    </span>
+                    <span>Confluence: {caseDetail.confluence_space_name}</span>
+                  </span>
+                )}
+              </div>
             </div>
 
             <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">

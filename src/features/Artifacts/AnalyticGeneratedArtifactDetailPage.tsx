@@ -155,7 +155,7 @@ export function AnalyticGeneratedArtifactDetailPage() {
       <div className="min-h-[calc(100vh-64px)] bg-[#F7F6F8]">
         <div className="mx-auto w-full max-w-6xl px-4 py-10">
           <div className="flex items-center justify-center rounded-2xl bg-white px-6 py-10 shadow-[0_6px_20px_rgba(0,0,0,0.06)]">
-            <ArtifactsSpinner />
+            <ArtifactsSpinner title="Генерация артефактов…" />
           </div>
         </div>
       </div>
@@ -270,7 +270,7 @@ export function AnalyticGeneratedArtifactDetailPage() {
             {isBusy && (
               <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 backdrop-blur-sm">
                 <div className="max-w-xs w-full">
-                  <ArtifactsSpinner />
+                  <ArtifactsSpinner title="Генерация артефактов…" />
                 </div>
               </div>
             )}

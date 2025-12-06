@@ -1,9 +1,8 @@
+import { Skeleton } from "@/components/shared/skeleton";
 import { Button } from "@/components/ui/button";
 import { HK_ROUTES } from "@/consts/HK_ROUTES";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import CasesSkeleton from "./CasesSkeleton";
-import { Skeleton } from "@/components/shared/skeleton";
 
 export default function CasesEmptyState() {
   const navigate = useNavigate();

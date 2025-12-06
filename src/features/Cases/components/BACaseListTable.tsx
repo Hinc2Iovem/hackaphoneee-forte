@@ -201,10 +201,11 @@ export function BACaseListTable({ cases }: Props) {
                         e.stopPropagation();
                         openDeleteDialog(c);
                       }}
-                      className="rounded-full p-1 text-[#888085] hover:bg-[#F0F2F5]"
+                      className="rounded-full cursor-pointer p-1.5 text-[#D32F2F] hover:bg-[#FFEBEE] transition-colors"
+                      aria-label="Удалить кейс"
                     >
-                      <span className="material-symbols-outlined text-lg">
-                        more_vert
+                      <span className="material-symbols-outlined text-[20px]">
+                        delete
                       </span>
                     </button>
                   </div>

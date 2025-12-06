@@ -2,7 +2,11 @@ import type { CSSProperties } from "react";
 
 const DOT_COUNT = 10;
 
-export default function ArtifactsSpinner() {
+type ArtifactsSpinnerTypes = {
+  title?: string;
+};
+
+export default function ArtifactsSpinner({ title }: ArtifactsSpinnerTypes) {
   const dots = Array.from({ length: DOT_COUNT });
 
   return (
@@ -25,7 +29,7 @@ export default function ArtifactsSpinner() {
       </div>
 
       <p className="text-lg font-medium text-[#1B1B1F]">
-        Генерация артефактов…
+        {title ?? "Генерация артефактов…"}
       </p>
     </div>
   );

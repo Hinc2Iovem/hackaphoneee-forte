@@ -76,7 +76,7 @@ export function AnalyticGeneratedArtifactsListPage() {
         {isLoading && (
           <div className="pt-6">
             <div className="flex items-center justify-center rounded-2xl bg-white px-6 py-10 shadow-[0_6px_20px_rgba(0,0,0,0.06)]">
-              <ArtifactsSpinner />
+              <ArtifactsSpinner title="Генерация артефактов…" />
             </div>
           </div>
         )}
