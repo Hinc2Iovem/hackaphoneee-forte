@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import { toastError, toastSuccess } from "@/components/shared/toasts";
 import { Button } from "@/components/ui/button";
 import { HK_ROUTES } from "@/consts/HK_ROUTES";
@@ -8,15 +10,26 @@ import {
   type EnsureDocumentsResponse,
 } from "@/features/Cases/hooks/useGetCaseDocuments";
 import ArtifactsSpinner from "@/features/NewCase/components/ArtifactsLoading";
-import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import useReviewDocument from "../Cases/hooks/useReviewDocument";
 import useUploadDocx from "../Cases/hooks/useUploadDocx";
 import useLlmEditDocument from "../Cases/hooks/useLlmEditDocument";
 import { useQueryClient } from "@tanstack/react-query";
 import { casesQK } from "@/features/Cases/hooks/casesQueryKeys";
+import { DocumentVersionsPanel } from "./DocumentsVersionsPanel";
 
 type GeneratedDocumentFile = EnsureDocumentsResponse["files"][number];
+
+export const CAN_LLM_EDIT_TYPES = new Set<string>([
+  "vision",
+  "scope",
+  "bpmn",
+  "context_diagram",
+  "uml_use_case_diagram",
+  "sequence_diagram",
+  "erd",
+  "state_diagram",
+]);
 
 function StatusPill({ status }: { status: DocumentStatusVariation }) {
   const config: Record<
@@ -150,6 +163,17 @@ export function AnalyticGeneratedArtifactDetailPage() {
     }
   };
 
+  const handleTextareaKeyDown = (
+    e: React.KeyboardEvent<HTMLTextAreaElement>
+  ) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      if (!llmEditMutation.isPending && instructions.trim()) {
+        void handleLlmEdit();
+      }
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-[calc(100vh-64px)] bg-[#F7F6F8]">
@@ -202,7 +226,7 @@ export function AnalyticGeneratedArtifactDetailPage() {
   const hasDocFile = !!selected.docx_url && docxIsDocFile;
 
   const canLlmEdit =
-    selected.doc_type === "vision" || selected.doc_type === "scope";
+    !!selected.doc_type && CAN_LLM_EDIT_TYPES.has(selected.doc_type);
   const isBusy = llmEditMutation.isPending;
 
   return (
@@ -266,10 +290,10 @@ export function AnalyticGeneratedArtifactDetailPage() {
             </div>
           </aside>
 
-          <section className="relative rounded-2xl bg-white p-5 md:p-6 shadow-[0_2px_12px_rgba(0,0,0,0.06)] flex flex-col">
+          <section className="relative flex flex-col rounded-2xl bg-white p-5 shadow-[0_2px_12px_rgba(0,0,0,0.06)] md:p-6">
             {isBusy && (
               <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 backdrop-blur-sm">
-                <div className="max-w-xs w-full">
+                <div className="w-full max-w-xs">
                   <ArtifactsSpinner title="Генерация артефактов…" />
                 </div>
               </div>
@@ -285,7 +309,7 @@ export function AnalyticGeneratedArtifactDetailPage() {
             </header>
 
             {hasImage && !hasDocFile && imageUrl ? (
-              <div className="flex-1 flex items-center justify-center rounded-xl border border-[#E3E1E8] bg-[#F7F6F8] px-4 py-6">
+              <div className="flex flex-1 items-center justify-center rounded-xl border border-[#E3E1E8] bg-[#F7F6F8] px-4 py-6">
                 <img
                   src={imageUrl}
                   alt={selected.title}
@@ -293,7 +317,7 @@ export function AnalyticGeneratedArtifactDetailPage() {
                 />
               </div>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center rounded-xl border border-[#E3E1E8] bg-[#F7F6F8] px-4 py-6 text-center">
+              <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-[#E3E1E8] bg-[#F7F6F8] px-4 py-6 text-center">
                 <p className="text-sm text-[#55505A]">
                   Предпросмотр файла в браузере недоступен.
                 </p>
@@ -368,7 +392,7 @@ export function AnalyticGeneratedArtifactDetailPage() {
                 variant="outline"
                 onClick={() => handleReview("rejected_by_ba")}
                 disabled={reviewMutation.isPending}
-                className="h-10 rounded-lg border border-rose-200 cursor-pointer bg-rose-50 text-xs font-semibold text-rose-700 hover:bg-rose-100 disabled:opacity-60"
+                className="h-10 cursor-pointer rounded-lg border border-rose-200 bg-rose-50 text-xs font-semibold text-rose-700 hover:bg-rose-100 disabled:opacity-60"
               >
                 Не принимать
               </Button>
@@ -377,20 +401,25 @@ export function AnalyticGeneratedArtifactDetailPage() {
                 type="button"
                 onClick={() => handleReview("approved_by_ba")}
                 disabled={reviewMutation.isPending}
-                className="h-10 rounded-lg bg-emerald-600 cursor-pointer text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+                className="h-10 cursor-pointer rounded-lg bg-emerald-600 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
               >
                 Принять
               </Button>
             </div>
 
-            <div className="rounded-2xl bg-white p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-[#E3E1E8]">
-              <p className="text-xs font-semibold text-[#1B1B1F] mb-1">
+            <DocumentVersionsPanel documentId={selected.id} />
+
+            <div className="rounded-2xl border border-[#E3E1E8] bg-white p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+              <p className="mb-1 text-xs font-semibold text-[#1B1B1F]">
                 Правки через AI
               </p>
-              <p className="text-[11px] text-[#888085] mb-2">
-                Сейчас поддерживаются только типы документов{" "}
-                <span className="font-mono text-[10px]">vision</span> и{" "}
-                <span className="font-mono text-[10px]">scope</span>.
+              <p className="mb-2 text-[11px] text-[#888085]">
+                Для текстовых артефактов{" "}
+                <span className="font-mono text-[10px]">vision</span>,{" "}
+                <span className="font-mono text-[10px]">scope</span> и диаграмм
+                (например, BPMN, контекст, Use Case) можно запросить{" "}
+                <span className="font-semibold">повторную генерацию</span> по
+                инструкции.
               </p>
 
               {canLlmEdit ? (
@@ -400,36 +429,40 @@ export function AnalyticGeneratedArtifactDetailPage() {
                       warning
                     </span>
                     <span>
-                      После применения правок текущий файл будет{" "}
+                      После применения правок содержимое текущего артефакта
+                      будет перезаписано, но{" "}
                       <span className="font-semibold">
-                        безвозвратно перезаписан
-                      </span>
-                      . Отменить изменения через интерфейс будет нельзя.
+                        предыдущие версии сохраняются
+                      </span>{" "}
+                      и их можно выбрать в блоке{" "}
+                      <span className="font-semibold">«История версий»</span>{" "}
+                      выше.
                     </span>
                   </p>
 
                   <textarea
-                    className="w-full mb-2 min-h-[200px] rounded-md border border-[#E3E1E8] bg-white px-2 py-1 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                    className="mb-2 min-h-[200px] w-full rounded-md border border-[#E3E1E8] bg-white px-2 py-1 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                     rows={4}
-                    placeholder='Например: "Сделай формулировки более формальными и добавь раздел про риски внедрения"'
+                    placeholder='Например: "Перегенерируй диаграмму: добавь сущность Loyalty API и покажи интеграцию с CRM"'
                     value={instructions}
                     onChange={(e) => setInstructions(e.target.value)}
+                    onKeyDown={handleTextareaKeyDown}
                   />
 
                   <Button
                     type="button"
                     onClick={handleLlmEdit}
                     disabled={!instructions.trim() || llmEditMutation.isPending}
-                    className="h-9 w-full rounded-lg cursor-pointer text-xs font-semibold"
+                    className="h-9 w-full cursor-pointer rounded-lg text-xs font-semibold"
                   >
                     {llmEditMutation.isPending
-                      ? "Применяем правки…"
-                      : "Отправить правки"}
+                      ? "Перегенерируем артефакт…"
+                      : "Отправить инструкцию AI"}
                   </Button>
                 </>
               ) : (
                 <p className="mt-1 text-[11px] text-[#B0A8B4]">
-                  Для этого типа документа AI-редактирование пока недоступно.
+                  Для этого типа артефакта AI-перегенерация пока недоступна.
                 </p>
               )}
             </div>
