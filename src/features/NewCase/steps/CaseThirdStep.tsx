@@ -125,7 +125,7 @@ export function CaseThirdStep({ answers: answersProp, onFinished }: Props) {
   }
 
   if (isGenerating || isPending) {
-    return <ArtifactsSpinner title="Генерация артефактов…" />;
+    return <ArtifactsSpinner title="Генерация вопросов..." />;
   }
 
   const artifacts = ARTIFACTS;
