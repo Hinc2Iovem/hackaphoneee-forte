@@ -11,12 +11,13 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // server: {
-  //   proxy: {
-  //     "/api": {
-  //       target: "http://192.168.8.14:8000",
-  //       changeOrigin: true,
-  //     },
-  //   },
-  // },
+  server: {
+    // proxy: {
+    //   "/api": {
+    //     target: "http://192.168.8.14:8000",
+    //     changeOrigin: true,
+    //   },
+    // },
+    allowedHosts: ["apogeal-junie-unhomogeneous.ngrok-free.dev"],
+  },
 });

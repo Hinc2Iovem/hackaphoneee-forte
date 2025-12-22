@@ -32,71 +32,69 @@ export function AppRouter() {
           />
         </Route>
 
-        <Route element={<RequireAuth />}>
-          <Route
-            path="/"
-            element={
-              <Navigate to={HK_ROUTES.private.CASES.SHARED.BASE} replace />
-            }
-          />
-          <Route
-            path={HK_ROUTES.private.CASES.SHARED.BASE}
-            element={<CasesPage />}
-          />
-
-          <Route
-            path="*"
-            element={
-              <Navigate to={HK_ROUTES.private.CASES.SHARED.BASE} replace />
-            }
-          />
-        </Route>
-
-        <Route element={<RequireAuth allowedRoles={["CLIENT"]} />}>
-          <Route
-            path={HK_ROUTES.private.ARTIFACTS.CLIENT.GENERATED}
-            element={<GeneratedArtifactsListPage />}
-          />
-          <Route
-            path={HK_ROUTES.private.ARTIFACTS.CLIENT.DETAILED}
-            element={<GeneratedArtifactDetailPage />}
-          />
-          <Route
-            path={HK_ROUTES.private.CASES.CLIENT.EDIT_INITIAL}
-            element={<EditCaseInitialStep />}
-          />
-          <Route path="/client/cases/new/*" element={<NewCase />} />
-          <Route
-            path={HK_ROUTES.private.CASES.CLIENT.FOLLOW_UP}
-            element={<FollowupChat />}
-          />
-        </Route>
+        {/* <Route element={<RequireAuth />}> */}
+        <Route
+          path="/"
+          element={
+            <Navigate to={HK_ROUTES.private.CASES.SHARED.BASE} replace />
+          }
+        />
+        <Route
+          path={HK_ROUTES.private.CASES.SHARED.BASE}
+          element={<CasesPage />}
+        />
 
         <Route
-          element={<RequireAuth allowedRoles={["ANALYTIC", "AUTHORITY"]} />}
-        >
-          <Route
-            path={HK_ROUTES.private.CASES.ANALYTIC.INITIAL_STEP}
-            element={<BACaseBriefPage />}
-          />
-          <Route
-            path={HK_ROUTES.private.ARTIFACTS.ANALYTIC.BASE}
-            element={<AnalyticArtifactsStep />}
-          />
-          <Route
-            path={HK_ROUTES.private.CASES.ANALYTIC.FOLLOW_UP}
-            element={<AnalyticFollowupChat />}
-          />
-          <Route
-            path={HK_ROUTES.private.ARTIFACTS.ANALYTIC.GENERATED}
-            element={<AnalyticGeneratedArtifactsListPage />}
-          />
-          <Route
-            path={HK_ROUTES.private.ARTIFACTS.ANALYTIC.DETAILED}
-            element={<AnalyticGeneratedArtifactDetailPage />}
-          />
-        </Route>
+          path="*"
+          element={
+            <Navigate to={HK_ROUTES.private.CASES.SHARED.BASE} replace />
+          }
+        />
       </Route>
+
+      <Route element={<RequireAuth allowedRoles={["CLIENT"]} />}>
+        <Route
+          path={HK_ROUTES.private.ARTIFACTS.CLIENT.GENERATED}
+          element={<GeneratedArtifactsListPage />}
+        />
+        <Route
+          path={HK_ROUTES.private.ARTIFACTS.CLIENT.DETAILED}
+          element={<GeneratedArtifactDetailPage />}
+        />
+        <Route
+          path={HK_ROUTES.private.CASES.CLIENT.EDIT_INITIAL}
+          element={<EditCaseInitialStep />}
+        />
+        <Route path="/client/cases/new/*" element={<NewCase />} />
+        <Route
+          path={HK_ROUTES.private.CASES.CLIENT.FOLLOW_UP}
+          element={<FollowupChat />}
+        />
+      </Route>
+
+      <Route element={<RequireAuth allowedRoles={["ANALYTIC", "AUTHORITY"]} />}>
+        <Route
+          path={HK_ROUTES.private.CASES.ANALYTIC.INITIAL_STEP}
+          element={<BACaseBriefPage />}
+        />
+        <Route
+          path={HK_ROUTES.private.ARTIFACTS.ANALYTIC.BASE}
+          element={<AnalyticArtifactsStep />}
+        />
+        <Route
+          path={HK_ROUTES.private.CASES.ANALYTIC.FOLLOW_UP}
+          element={<AnalyticFollowupChat />}
+        />
+        <Route
+          path={HK_ROUTES.private.ARTIFACTS.ANALYTIC.GENERATED}
+          element={<AnalyticGeneratedArtifactsListPage />}
+        />
+        <Route
+          path={HK_ROUTES.private.ARTIFACTS.ANALYTIC.DETAILED}
+          element={<AnalyticGeneratedArtifactDetailPage />}
+        />
+      </Route>
+      {/* </Route> */}
     </Routes>
   );
 }
