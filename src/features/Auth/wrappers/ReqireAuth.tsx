@@ -10,10 +10,14 @@ export function RequireAuth({ allowedRoles }: RequireAuthProps) {
   const { user, ready } = useAuth();
   const location = useLocation();
 
+  console.log("user: ", user);
   if (!ready) return null;
 
   const hasUser = !!user && !user.loggedOut;
   const role = user?.role;
+
+  console.log("user: ", user);
+  console.log("hasUser: ", hasUser);
 
   if (!hasUser) {
     return <Navigate to="/auth/login" state={{ from: location }} replace />;

@@ -18,17 +18,17 @@ export type AuthTokens = {
 
 export const axiosAuth = axios.create({
   baseURL: `${AUTH_URL}/api`,
-  withCredentials: true,
+  // withCredentials: true,
 });
 
 export const axiosCustomized = axios.create({
   baseURL: `${BASE_URL}/api`,
-  withCredentials: true,
+  // withCredentials: true,
 });
 
 export const axiosApiRaw = axios.create({
   baseURL: axiosCustomized.defaults.baseURL,
-  withCredentials: axiosCustomized.defaults.withCredentials,
+  // withCredentials: axiosCustomized.defaults.withCredentials,
   timeout: axiosCustomized.defaults.timeout ?? 30000,
 });
 
