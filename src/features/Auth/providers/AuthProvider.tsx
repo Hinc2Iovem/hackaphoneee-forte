@@ -39,17 +39,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     (async () => {
       const persisted = loadAuthFromSession();
-      if (persisted?.refreshToken) {
+      if (persisted?.refresh) {
         try {
           const resp = await axiosAuth.post<AuthResponse>("/auth/refresh/", {
-            refreshToken: persisted.refreshToken,
+            refresh: persisted.refresh,
           });
 
           const fresh: StoredAuth = { ...resp.data, loggedOut: false };
           setUser(fresh);
           setAuthTokens({
-            accessToken: fresh.accessToken,
-            refreshToken: fresh.refreshToken,
+            access: fresh.access,
+            refresh: fresh.refresh,
           });
           saveAuthToSession(fresh);
         } catch {
@@ -65,8 +65,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (user && !user.loggedOut) {
       setAuthTokens({
-        accessToken: user.accessToken,
-        refreshToken: user.refreshToken,
+        access: user.access,
+        refresh: user.refresh,
       });
       saveAuthToSession(user);
     } else {
@@ -81,17 +81,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const auth: StoredAuth = { ...resp.data, loggedOut: false };
     setUser(auth);
     setAuthTokens({
-      accessToken: auth.accessToken,
-      refreshToken: auth.refreshToken,
+      access: auth.access,
+      refresh: auth.refresh,
     });
     saveAuthToSession(auth);
   }
 
   async function logout() {
-    if (user?.refreshToken) {
+    if (user?.refresh) {
       try {
         await axiosAuth.post("/auth/logout/", {
-          refreshToken: user.refreshToken,
+          refresh: user.refresh,
         });
         queryClient.clear();
       } catch {}

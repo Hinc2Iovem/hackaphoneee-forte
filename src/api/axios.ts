@@ -3,8 +3,8 @@ import { AUTH_URL, BASE_URL } from "@/lib/env";
 import type { HKRolesTypes } from "@/consts/HK_ROLES";
 
 export type AuthResponse = {
-  accessToken: string;
-  refreshToken: string;
+  access: string;
+  refresh: string;
   fullName: string;
   role: HKRolesTypes;
   userId: string;
@@ -12,8 +12,8 @@ export type AuthResponse = {
 };
 
 export type AuthTokens = {
-  accessToken: string | null;
-  refreshToken: string | null;
+  access: string | null;
+  refresh: string | null;
 };
 
 export const axiosAuth = axios.create({
@@ -32,29 +32,29 @@ export const axiosApiRaw = axios.create({
   timeout: axiosCustomized.defaults.timeout ?? 30000,
 });
 
-let accessToken: string | null = null;
-let refreshToken: string | null = null;
+let access: string | null = null;
+let refresh: string | null = null;
 let refreshPromise: Promise<string> | null = null;
 
 export function setAuthTokens(tokens: AuthTokens) {
-  accessToken = tokens.accessToken ?? null;
-  refreshToken = tokens.refreshToken ?? null;
+  access = tokens.access ?? null;
+  refresh = tokens.refresh ?? null;
 }
 
 export function getAuthTokens(): AuthTokens {
-  return { accessToken, refreshToken };
+  return { access, refresh };
 }
 
 export function clearAuthTokens() {
-  accessToken = null;
-  refreshToken = null;
+  access = null;
+  refresh = null;
 }
 
 axiosCustomized.interceptors.request.use(
   (config: InternalAxiosRequestConfig & { _retry?: boolean }) => {
-    if (accessToken && !config._retry) {
+    if (access && !config._retry) {
       config.headers = config.headers ?? {};
-      config.headers.Authorization = `Bearer ${accessToken}`;
+      config.headers.Authorization = `Bearer ${access}`;
     }
     return config;
   }
@@ -86,7 +86,7 @@ axiosCustomized.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    if (!refreshToken) {
+    if (!refresh) {
       return Promise.reject(error);
     }
 
@@ -94,14 +94,14 @@ axiosCustomized.interceptors.response.use(
       refreshPromise = (async () => {
         try {
           const resp = await axiosAuth.post<AuthResponse>("/auth/refresh", {
-            refreshToken,
+            refresh,
           });
 
-          const newAccess = resp.data.accessToken;
-          const newRefresh = resp.data.refreshToken ?? refreshToken;
+          const newAccess = resp.data.access;
+          const newRefresh = resp.data.refresh ?? refresh;
 
-          accessToken = newAccess;
-          refreshToken = newRefresh;
+          access = newAccess;
+          refresh = newRefresh;
 
           return newAccess;
         } catch (e) {
@@ -132,9 +132,9 @@ axiosAuth.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     config.url?.startsWith("/auth/login") ||
     config.url?.startsWith("/auth/refresh");
 
-  if (!isLoginOrRefresh && accessToken) {
+  if (!isLoginOrRefresh && access) {
     config.headers = config.headers ?? {};
-    config.headers.Authorization = `Bearer ${accessToken}`;
+    config.headers.Authorization = `Bearer ${access}`;
   }
   return config;
 });
