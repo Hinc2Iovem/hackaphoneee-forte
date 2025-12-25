@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const persisted = loadAuthFromSession();
       if (persisted?.refreshToken) {
         try {
-          const resp = await axiosAuth.post<AuthResponse>("/auth/refresh", {
+          const resp = await axiosAuth.post<AuthResponse>("/auth/refresh/", {
             refreshToken: persisted.refreshToken,
           });
 
@@ -76,7 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   async function login(payload: { email: string; password: string }) {
-    const resp = await axiosAuth.post<AuthResponse>("/auth/login", payload);
+    const resp = await axiosAuth.post<AuthResponse>("/auth/login/", payload);
 
     const auth: StoredAuth = { ...resp.data, loggedOut: false };
     setUser(auth);
@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function logout() {
     if (user?.refreshToken) {
       try {
-        await axiosAuth.post("/auth/logout", {
+        await axiosAuth.post("/auth/logout/", {
           refreshToken: user.refreshToken,
         });
         queryClient.clear();
