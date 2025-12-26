@@ -18,7 +18,7 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
-    allowedHosts: ["apogeal-junie-unhomogeneous.ngrok-free.dev"],
+    // allowedHosts: ["apogeal-junie-unhomogeneous.ngrok-free.dev"],
   },
 });
 

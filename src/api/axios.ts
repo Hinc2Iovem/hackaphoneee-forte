@@ -19,12 +19,12 @@ export type AuthTokens = {
 };
 
 export const axiosAuth = axios.create({
-  baseURL: `${AUTH_URL}/api`,
+  baseURL: `/api`,
   withCredentials: true,
 });
 
 export const axiosCustomized = axios.create({
-  baseURL: `${BASE_URL}/api`,
+  baseURL: `/api`,
   withCredentials: true,
 });
 
