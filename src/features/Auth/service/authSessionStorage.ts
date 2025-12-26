@@ -1,7 +1,12 @@
-import type { AuthResponse } from "@/api/axios";
-
-export type StoredAuth = AuthResponse & {
+export type StoredAuth = {
+  access: string;
+  refresh: string;
   loggedOut: boolean;
+  userId: string;
+  username: string;
+  email: string;
+  fullName: string;
+  role: string;
 };
 
 export const AUTH_SESSION_STORAGE_KEY = "hk-auth";

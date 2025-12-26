@@ -16,9 +16,6 @@ export function RequireAuth({ allowedRoles }: RequireAuthProps) {
   const hasUser = !!user && !user.loggedOut;
   const role = user?.role;
 
-  console.log("user: ", user);
-  console.log("hasUser: ", hasUser);
-
   if (!hasUser) {
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
   }
@@ -27,7 +24,7 @@ export function RequireAuth({ allowedRoles }: RequireAuthProps) {
     allowedRoles &&
     allowedRoles.length > 0 &&
     role &&
-    !allowedRoles.includes(role)
+    !allowedRoles.includes(role as "CLIENT")
   ) {
     return <Navigate to="/" replace />;
   }

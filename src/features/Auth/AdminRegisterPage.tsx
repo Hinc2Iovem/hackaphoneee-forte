@@ -13,7 +13,7 @@ import { toastError, toastSuccess } from "@/components/shared/toasts";
 
 type RegisterPayload = {
   email: string;
-  fullName: string;
+  name: string;
   password: string;
   role: HKRolesTypes;
 };
@@ -21,7 +21,7 @@ type RegisterPayload = {
 export function AdminRegisterPage() {
   const [form, setForm] = useState<RegisterPayload>({
     email: "",
-    fullName: "",
+    name: "",
     password: "",
     role: "CLIENT",
   });
@@ -57,11 +57,11 @@ export function AdminRegisterPage() {
 
     setSubmitting(true);
     try {
-      await axiosAuth.post("/admin/register", form);
+      await axiosAuth.post("/auth/register/", form);
 
       toastSuccess("Пользователь успешно создан");
 
-      setForm({ email: "", fullName: "", password: "", role: "CLIENT" });
+      setForm({ email: "", name: "", password: "", role: "CLIENT" });
       setConfirm("");
     } catch {
       const message = "Не удалось создать пользователя";
@@ -94,8 +94,8 @@ export function AdminRegisterPage() {
           <label className="block text-sm font-medium">Полное имя</label>
           <input
             type="text"
-            value={form.fullName}
-            onChange={(e) => update("fullName", e.target.value)}
+            value={form.name}
+            onChange={(e) => update("name", e.target.value)}
             className="w-full rounded-md border border-input bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
           />
         </div>

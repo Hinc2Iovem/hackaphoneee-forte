@@ -14,7 +14,7 @@ export function NavBar() {
   const { user, logout } = useAuth();
 
   const fullName = user?.fullName ?? "Пользователь";
-  const email = user?.username ?? "";
+  const email = user?.email ?? "";
 
   const initials =
     fullName

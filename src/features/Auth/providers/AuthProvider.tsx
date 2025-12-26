@@ -45,7 +45,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             refresh: persisted.refresh,
           });
 
-          const fresh: StoredAuth = { ...resp.data, loggedOut: false };
+          const fresh: StoredAuth = {
+            ...resp.data?.user,
+            access: resp.data.access,
+            refresh: resp.data.refresh,
+            userId: resp.data?.user?.id,
+            username: resp.data?.user?.name,
+            fullName: resp.data?.user?.name,
+            loggedOut: false,
+          };
           setUser(fresh);
           setAuthTokens({
             access: fresh.access,
@@ -78,7 +86,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function login(payload: { email: string; password: string }) {
     const resp = await axiosAuth.post<AuthResponse>("/auth/login/", payload);
 
-    const auth: StoredAuth = { ...resp.data, loggedOut: false };
+    const auth: StoredAuth = {
+      ...resp.data?.user,
+      access: resp.data.access,
+      refresh: resp.data.refresh,
+      userId: resp.data?.user?.id,
+      username: resp.data?.user?.name,
+      fullName: resp.data?.user?.name,
+      loggedOut: false,
+    };
     setUser(auth);
     setAuthTokens({
       access: auth.access,
