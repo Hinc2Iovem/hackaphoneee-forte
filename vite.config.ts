@@ -12,12 +12,21 @@ export default defineConfig({
     },
   },
   server: {
-    // proxy: {
-    //   "/api": {
-    //     target: "http://192.168.8.14:8000",
-    //     changeOrigin: true,
-    //   },
-    // },
+    proxy: {
+      "/api": {
+        target: "http://10.56.133.230:8000",
+        changeOrigin: true,
+      },
+    },
     allowedHosts: ["apogeal-junie-unhomogeneous.ngrok-free.dev"],
   },
 });
+
+// server: {
+//     proxy: {
+//       "/api": {.
+//         target: "http://127.0.0.1:8000", // порт Django
+//         changeOrigin: true,
+//       },
+//     },
+//   },
