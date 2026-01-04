@@ -1,6 +1,6 @@
-import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
-import { AUTH_URL, BASE_URL } from "@/lib/env";
 import type { HKRolesTypes } from "@/consts/HK_ROLES";
+import { AUTH_URL } from "@/lib/env";
+import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 
 export type AuthResponse = {
   access: string;
