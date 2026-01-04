@@ -1,3 +1,5 @@
+import type { HKRolesTypes } from "@/consts/HK_ROLES";
+
 export type StoredAuth = {
   access: string;
   refresh: string;
@@ -6,7 +8,7 @@ export type StoredAuth = {
   username: string;
   email: string;
   fullName: string;
-  role: string;
+  role: HKRolesTypes;
 };
 
 export const AUTH_SESSION_STORAGE_KEY = "hk-auth";

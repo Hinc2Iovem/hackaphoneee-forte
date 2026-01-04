@@ -14,7 +14,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://10.56.133.230:8000",
+        target: "https://api-talap.kcmg.kz",
         changeOrigin: true,
       },
     },

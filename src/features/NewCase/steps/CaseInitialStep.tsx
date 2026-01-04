@@ -5,40 +5,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
-import { useCreateCase } from "@/features/Cases/hooks/useCreateCase";
-import { CASE_INITIAL_QUESTIONS } from "../consts/CASE_INITIAL_QUESTIONS";
 import { HK_ROUTES } from "@/consts/HK_ROUTES";
-import NewCaseHeader from "../components/NewCaseHeader";
-import { useQueryClient } from "@tanstack/react-query";
 import { casesQK } from "@/features/Cases/hooks/casesQueryKeys";
-import { useGetConfluenceSpaces } from "@/features/Cases/hooks/useGetConfluenceSpaces"; // 👈 НОВЫЙ хук
-import type { ConfluenceSpace } from "@/features/Cases/hooks/useGetConfluenceSpaces";
-import { Check, ChevronsUpDown } from "lucide-react";
-import { cn } from "@/lib/utils";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "@/components/ui/command";
+import { useCreateCase } from "@/features/Cases/hooks/useCreateCase";
+import { useQueryClient } from "@tanstack/react-query";
+import NewCaseHeader from "../components/NewCaseHeader";
+import { CASE_INITIAL_QUESTIONS } from "../consts/CASE_INITIAL_QUESTIONS";
 
 export type CaseInitialAnswers = Record<string, string>;
 
 interface Props {
   initialTitle?: string;
   initialAnswers?: CaseInitialAnswers;
-  onSaveLocal?: (data: {
-    title: string;
-    answers: CaseInitialAnswers;
-    confluence_space_key: string | null;
-    confluence_space_name: string | null;
-  }) => void;
+  onSaveLocal?: (data: { title: string; answers: CaseInitialAnswers }) => void;
 }
 
 const SS_KEY = "hk_new_case_step1";
@@ -61,14 +40,14 @@ export function CaseInitialStep({
     initialAnswers ??
       Object.fromEntries(CASE_INITIAL_QUESTIONS.map((f) => [f.key, ""]))
   );
-  const [spacePopoverOpen, setSpacePopoverOpen] = useState(false);
+  // const [spacePopoverOpen, setSpacePopoverOpen] = useState(false);
 
-  const [selectedSpaceKey, setSelectedSpaceKey] = useState<string | null>(null);
-  const [selectedSpaceName, setSelectedSpaceName] = useState<string | null>(
-    null
-  );
+  // const [selectedSpaceKey, setSelectedSpaceKey] = useState<string | null>(null);
+  // const [selectedSpaceName, setSelectedSpaceName] = useState<string | null>(
+  //   null
+  // );
 
-  const { data: spaces, isLoading: isSpacesLoading } = useGetConfluenceSpaces();
+  // const { data: spaces, isLoading: isSpacesLoading } = useGetConfluenceSpaces();
 
   const { mutateAsync: createCase, isPending: isCreating } = useCreateCase();
   const navigate = useNavigate();
@@ -94,12 +73,12 @@ export function CaseInitialStep({
       if (parsed.answers) {
         setAnswers((prev) => ({ ...prev, ...parsed.answers }));
       }
-      if (parsed.confluence_space_key) {
-        setSelectedSpaceKey(parsed.confluence_space_key);
-      }
-      if (parsed.confluence_space_name) {
-        setSelectedSpaceName(parsed.confluence_space_name);
-      }
+      // if (parsed.confluence_space_key) {
+      //   setSelectedSpaceKey(parsed.confluence_space_key);
+      // }
+      // if (parsed.confluence_space_name) {
+      //   setSelectedSpaceName(parsed.confluence_space_name);
+      // }
     } catch (e) {
       console.warn("[CaseInitialStep] failed to read sessionStorage", e);
     } finally {
@@ -111,20 +90,17 @@ export function CaseInitialStep({
     if (!hydrated) return;
 
     try {
-      console.log("selectedSpaceKey: ", selectedSpaceKey);
-      console.log("selectedSpaceName: ", selectedSpaceName);
-
       const payload: Step1Draft = {
         title,
         answers,
-        confluence_space_key: selectedSpaceKey,
-        confluence_space_name: selectedSpaceName,
+        // confluence_space_key: selectedSpaceKey,
+        // confluence_space_name: selectedSpaceName,
       };
       sessionStorage.setItem(SS_KEY, JSON.stringify(payload));
     } catch (e) {
       console.warn("[CaseInitialStep] failed to write sessionStorage", e);
     }
-  }, [hydrated, title, answers, selectedSpaceKey, selectedSpaceName]);
+  }, [hydrated, title, answers]);
 
   function updateField(key: string, value: string) {
     setAnswers((prev) => ({ ...prev, [key]: value }));
@@ -133,8 +109,7 @@ export function CaseInitialStep({
   const allQuestionsFilled = CASE_INITIAL_QUESTIONS.every((f) =>
     (answers[f.key] ?? "").trim()
   );
-  const canSubmit =
-    !!title.trim() && allQuestionsFilled && !isCreating && !!selectedSpaceKey;
+  const canSubmit = !!title.trim() && allQuestionsFilled && !isCreating;
 
   async function handleNext() {
     if (!canSubmit) return;
@@ -144,14 +119,14 @@ export function CaseInitialStep({
     onSaveLocal?.({
       title: trimmedTitle,
       answers,
-      confluence_space_key: selectedSpaceKey ?? null,
-      confluence_space_name: selectedSpaceName ?? null,
+      // confluence_space_key: selectedSpaceKey ?? null,
+      // confluence_space_name: selectedSpaceName ?? null,
     });
 
     const session = await createCase({
       title: trimmedTitle,
-      confluence_space_key: selectedSpaceKey ?? null,
-      confluence_space_name: selectedSpaceName ?? null,
+      // confluence_space_key: selectedSpaceKey ?? null,
+      // confluence_space_name: selectedSpaceName ?? null,
     });
 
     queryClient.invalidateQueries({ queryKey: casesQK.all });
@@ -160,10 +135,10 @@ export function CaseInitialStep({
     navigate(`/client/cases/new/${session.id}/artifacts`);
   }
 
-  function handleSpaceClick(space: ConfluenceSpace) {
-    setSelectedSpaceKey(space.key);
-    setSelectedSpaceName(space.name);
-  }
+  // function handleSpaceClick(space: ConfluenceSpace) {
+  //   setSelectedSpaceKey(space.key);
+  //   setSelectedSpaceName(space.name);
+  // }
 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-[#F7F6F8]">
@@ -209,7 +184,7 @@ export function CaseInitialStep({
           ))}
         </div>
 
-        <div className="mt-8 space-y-3">
+        {/* <div className="mt-8 space-y-3">
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-lg font-semibold text-[#1B1B1F]">
               Выберите нужный space в Confluence
@@ -307,7 +282,7 @@ export function CaseInitialStep({
               </p>
             )}
           </div>
-        </div>
+        </div> */}
       </div>
 
       <div className="sticky bottom-0 left-0 right-0 border-t border-[#E3E1E8] bg-[#F7F6F8]/95 backdrop-blur-sm">

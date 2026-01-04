@@ -1,13 +1,50 @@
 import { Skeleton } from "@/components/shared/skeleton";
 import { Button } from "@/components/ui/button";
 import { HK_ROUTES } from "@/consts/HK_ROUTES";
-import { useEffect, useState } from "react";
+import { useAuth } from "@/features/Auth/providers/AuthProvider";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+type Role = "CLIENT" | "AUTHORITY" | "ANALYTIC" | string;
+
 export default function CasesEmptyState() {
+  const { user } = useAuth();
+  const role = (user?.role ?? "") as Role;
+
   const navigate = useNavigate();
   const [showSkeleton, setShowSkeleton] = useState(true);
   const [animateIn, setAnimateIn] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setShowSkeleton(false);
+      requestAnimationFrame(() => setAnimateIn(true));
+    }, 400);
+
+    return () => clearTimeout(t);
+  }, []);
+
+  const canCreate = role === "CLIENT";
+
+  const title = useMemo(() => {
+    if (role === "ANALYTIC") return "Пока нет кейсов";
+    if (role === "AUTHORITY") return "Пока нет кейсов";
+    return "У вас пока нет запросов";
+  }, [role]);
+
+  const subtitle = useMemo(() => {
+    if (role === "ANALYTIC")
+      return "Когда появятся кейсы, вы увидите их здесь. Вы можете просматривать и анализировать, но не создавать.";
+    if (role === "AUTHORITY")
+      return "Когда появятся кейсы, вы увидите их здесь. Создание кейсов доступно клиентам.";
+    return "Создайте запрос, опишите идею проекта — AI подготовит комплект артефактов.";
+  }, [role]);
+
+  const badgeText = useMemo(() => {
+    if (role === "ANALYTIC") return "Режим аналитика";
+    if (role === "AUTHORITY") return "Режим куратора";
+    return "Начните с первого запроса";
+  }, [role]);
 
   const handleCreateNew = () => {
     try {
@@ -20,17 +57,6 @@ export default function CasesEmptyState() {
 
     navigate(HK_ROUTES.private.CASES.CLIENT.NEW);
   };
-
-  useEffect(() => {
-    // short skeleton phase
-    const t = setTimeout(() => {
-      setShowSkeleton(false);
-      // trigger fade/slide animation on real content
-      requestAnimationFrame(() => setAnimateIn(true));
-    }, 400);
-
-    return () => clearTimeout(t);
-  }, []);
 
   return (
     <div className="w-full bg-[#F7F6F8] pb-16">
@@ -55,7 +81,7 @@ export default function CasesEmptyState() {
                   <span className="material-symbols-outlined text-sm">
                     rocket_launch
                   </span>
-                  <span>Начните с первого запроса</span>
+                  <span>{badgeText}</span>
                 </div>
 
                 <div className="flex items-start gap-3 mb-5">
@@ -67,75 +93,35 @@ export default function CasesEmptyState() {
 
                   <div>
                     <p className="text-lg font-semibold text-[#1B1B1F] leading-snug">
-                      У вас пока нет запросов
+                      {title}
                     </p>
-                    <p className="text-xs text-[#888085] mt-1">
-                      Создайте запрос, опишите идею проекта — AI подготовит
-                      комплект артефактов.
-                    </p>
+                    <p className="text-xs text-[#888085] mt-1">{subtitle}</p>
                   </div>
                 </div>
 
-                <Button
-                  className="w-full rounded-full h-10 text-sm"
-                  onClick={handleCreateNew}
-                >
-                  <span className="material-symbols-outlined text-xl mr-1">
-                    add_circle
-                  </span>
-                  Новый запрос
-                </Button>
+                {canCreate ? (
+                  <Button
+                    className="w-full rounded-full h-10 text-sm"
+                    onClick={handleCreateNew}
+                  >
+                    <span className="material-symbols-outlined text-xl mr-1">
+                      add_circle
+                    </span>
+                    Новый запрос
+                  </Button>
+                ) : (
+                  <div className="rounded-xl border border-[#F1EFF4] bg-[#FBFAFE] px-4 py-3 text-[12px] text-[#55505A]">
+                    Создание кейсов недоступно для вашей роли.
+                  </div>
+                )}
               </div>
 
-              <div className="rounded-2xl border border-[#F1EFF4] bg-[#FBFAFE] p-5 text-left text-[11px] text-[#55505A]">
-                <p className="mb-4 font-semibold uppercase tracking-[0.16em] text-[#B0A9B5]">
-                  Как это работает
-                </p>
-
-                <ol className="space-y-4">
-                  <li className="flex gap-3">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#FFE6EE] text-[11px] font-semibold text-[#A31551]">
-                      1
-                    </span>
-                    <div>
-                      <p className="text-xs font-semibold text-[#1B1B1F]">
-                        Опишите идею
-                      </p>
-                      <p className="text-[11px] text-[#888085]">
-                        AI уточнит ключевые детали.
-                      </p>
-                    </div>
-                  </li>
-
-                  <li className="flex gap-3">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#FFE6EE] text-[11px] font-semibold text-[#A31551]">
-                      2
-                    </span>
-                    <div>
-                      <p className="text-xs font-semibold text-[#1B1B1F]">
-                        Выберите артефакты
-                      </p>
-                      <p className="text-[11px] text-[#888085]">
-                        BRD, BPMN, UML, user stories и др.
-                      </p>
-                    </div>
-                  </li>
-
-                  <li className="flex gap-3">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#FFE6EE] text-[11px] font-semibold text-[#A31551]">
-                      3
-                    </span>
-                    <div>
-                      <p className="text-xs font-semibold text-[#1B1B1F]">
-                        Получите документы
-                      </p>
-                      <p className="text-[11px] text-[#888085]">
-                        Готовый пакет выгружается автоматически.
-                      </p>
-                    </div>
-                  </li>
-                </ol>
-              </div>
+              {/* “How it works” block only for clients (optional) */}
+              {canCreate ? (
+                <HowItWorksMobile />
+              ) : (
+                <HintBlockMobile role={role} />
+              )}
             </div>
 
             {/* ---------- DESKTOP VIEW ---------- */}
@@ -151,7 +137,11 @@ export default function CasesEmptyState() {
                       <span className="material-symbols-outlined text-sm">
                         rocket_launch
                       </span>
-                      <span>Добро пожаловать в Talap AI</span>
+                      <span>
+                        {role === "CLIENT"
+                          ? "Добро пожаловать в Talap AI"
+                          : badgeText}
+                      </span>
                     </div>
 
                     <div className="flex items-start gap-5">
@@ -163,84 +153,184 @@ export default function CasesEmptyState() {
 
                       <div className="space-y-3">
                         <p className="text-2xl font-semibold text-[#1B1B1F] leading-snug">
-                          У вас пока нет запросов
+                          {title}
                         </p>
                         <p className="text-sm text-[#888085] max-w-md leading-relaxed">
-                          Создайте кейс, ответьте на несколько вопросов — Talap
-                          AI автоматически подготовит пакет аналитических
-                          документов и диаграмм.
+                          {subtitle}
                         </p>
                       </div>
                     </div>
 
-                    <Button
-                      className="rounded-full px-7 h-12 text-base"
-                      onClick={handleCreateNew}
-                    >
-                      <span className="material-symbols-outlined text-xl mr-2">
-                        add_circle
-                      </span>
-                      Создать новый запрос
-                    </Button>
+                    {canCreate ? (
+                      <Button
+                        className="rounded-full px-7 h-12 text-base"
+                        onClick={handleCreateNew}
+                      >
+                        <span className="material-symbols-outlined text-xl mr-2">
+                          add_circle
+                        </span>
+                        Создать новый запрос
+                      </Button>
+                    ) : (
+                      <div className="max-w-md rounded-2xl border border-[#F1EFF4] bg-[#FBFAFE] px-5 py-4 text-sm text-[#55505A]">
+                        <p className="font-semibold text-[#1B1B1F]">
+                          Доступ только на просмотр
+                        </p>
+                        <p className="mt-1 text-[#888085]">
+                          Вы сможете просматривать кейсы, когда они появятся.
+                          Создание доступно только клиентам.
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Right column */}
-                  <div className="rounded-2xl border border-[#F1EFF4] bg-[#FBFAFE] px-6 py-6 text-xs text-[#55505A]">
-                    <p className="mb-4 text-[12px] font-semibold uppercase tracking-[0.14em] text-[#B0A9B5]">
-                      Как это работает
-                    </p>
-
-                    <ol className="space-y-5">
-                      <li className="flex gap-3">
-                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#FFE6EE] text-[11px] font-semibold text-[#A31551]">
-                          1
-                        </span>
-                        <div>
-                          <p className="text-xs font-semibold text-[#1B1B1F]">
-                            Опишите идею проекта
-                          </p>
-                          <p className="text-[11px] text-[#888085]">
-                            Ответьте на ключевые вопросы о продукте и клиенте.
-                          </p>
-                        </div>
-                      </li>
-
-                      <li className="flex gap-3">
-                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#FFE6EE] text-[11px] font-semibold text-[#A31551]">
-                          2
-                        </span>
-                        <div>
-                          <p className="text-xs font-semibold text-[#1B1B1F]">
-                            Выберите артефакты
-                          </p>
-                          <p className="text-[11px] text-[#888085]">
-                            BRD, BPMN, UML, user stories и другие материалы.
-                          </p>
-                        </div>
-                      </li>
-
-                      <li className="flex gap-3">
-                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#FFE6EE] text-[11px] font-semibold text-[#A31551]">
-                          3
-                        </span>
-                        <div>
-                          <p className="text-xs font-semibold text-[#1B1B1F]">
-                            Получите результаты
-                          </p>
-                          <p className="text-[11px] text-[#888085]">
-                            Финальный пакет документов будет готов
-                            автоматически.
-                          </p>
-                        </div>
-                      </li>
-                    </ol>
-                  </div>
+                  {canCreate ? (
+                    <HowItWorksDesktop />
+                  ) : (
+                    <RoleInfoDesktop role={role} />
+                  )}
                 </div>
               </div>
             </div>
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+/* ---------------- small sub-components ---------------- */
+
+function HowItWorksMobile() {
+  return (
+    <div className="rounded-2xl border border-[#F1EFF4] bg-[#FBFAFE] p-5 text-left text-[11px] text-[#55505A]">
+      <p className="mb-4 font-semibold uppercase tracking-[0.16em] text-[#B0A9B5]">
+        Как это работает
+      </p>
+      <ol className="space-y-4">
+        <li className="flex gap-3">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#FFE6EE] text-[11px] font-semibold text-[#A31551]">
+            1
+          </span>
+          <div>
+            <p className="text-xs font-semibold text-[#1B1B1F]">Опишите идею</p>
+            <p className="text-[11px] text-[#888085]">
+              AI уточнит ключевые детали.
+            </p>
+          </div>
+        </li>
+        <li className="flex gap-3">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#FFE6EE] text-[11px] font-semibold text-[#A31551]">
+            2
+          </span>
+          <div>
+            <p className="text-xs font-semibold text-[#1B1B1F]">
+              Выберите артефакты
+            </p>
+            <p className="text-[11px] text-[#888085]">BRD, BPMN, UML и др.</p>
+          </div>
+        </li>
+        <li className="flex gap-3">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#FFE6EE] text-[11px] font-semibold text-[#A31551]">
+            3
+          </span>
+          <div>
+            <p className="text-xs font-semibold text-[#1B1B1F]">
+              Получите документы
+            </p>
+            <p className="text-[11px] text-[#888085]">
+              Пакет выгружается автоматически.
+            </p>
+          </div>
+        </li>
+      </ol>
+    </div>
+  );
+}
+
+function HintBlockMobile({ role }: { role: string }) {
+  return (
+    <div className="rounded-2xl border border-[#F1EFF4] bg-[#FBFAFE] p-5 text-left text-[12px] text-[#55505A]">
+      <p className="font-semibold text-[#1B1B1F]">
+        {role === "ANALYTIC"
+          ? "Здесь появятся кейсы для анализа"
+          : "Здесь появятся кейсы"}
+      </p>
+      <p className="mt-2 text-[#888085]">
+        {role === "ANALYTIC"
+          ? "Вы сможете открывать кейсы и смотреть прогресс, но создавать кейсы нельзя."
+          : "Создание кейсов доступно клиентам."}
+      </p>
+    </div>
+  );
+}
+
+function HowItWorksDesktop() {
+  return (
+    <div className="rounded-2xl border border-[#F1EFF4] bg-[#FBFAFE] px-6 py-6 text-xs text-[#55505A]">
+      <p className="mb-4 text-[12px] font-semibold uppercase tracking-[0.14em] text-[#B0A9B5]">
+        Как это работает
+      </p>
+      <ol className="space-y-5">
+        <li className="flex gap-3">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#FFE6EE] text-[11px] font-semibold text-[#A31551]">
+            1
+          </span>
+          <div>
+            <p className="text-xs font-semibold text-[#1B1B1F]">
+              Опишите идею проекта
+            </p>
+            <p className="text-[11px] text-[#888085]">
+              Ответьте на ключевые вопросы о продукте и клиенте.
+            </p>
+          </div>
+        </li>
+        <li className="flex gap-3">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#FFE6EE] text-[11px] font-semibold text-[#A31551]">
+            2
+          </span>
+          <div>
+            <p className="text-xs font-semibold text-[#1B1B1F]">
+              Выберите артефакты
+            </p>
+            <p className="text-[11px] text-[#888085]">
+              BRD, BPMN, UML, user stories и другое.
+            </p>
+          </div>
+        </li>
+        <li className="flex gap-3">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#FFE6EE] text-[11px] font-semibold text-[#A31551]">
+            3
+          </span>
+          <div>
+            <p className="text-xs font-semibold text-[#1B1B1F]">
+              Получите результаты
+            </p>
+            <p className="text-[11px] text-[#888085]">
+              Пакет документов будет готов автоматически.
+            </p>
+          </div>
+        </li>
+      </ol>
+    </div>
+  );
+}
+
+function RoleInfoDesktop({ role }: { role: string }) {
+  return (
+    <div className="rounded-2xl border border-[#F1EFF4] bg-[#FBFAFE] px-6 py-6 text-sm text-[#55505A]">
+      <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[#B0A9B5]">
+        Подсказка
+      </p>
+      <p className="mt-3 font-semibold text-[#1B1B1F]">
+        {role === "ANALYTIC" ? "Роль: аналитик" : "Роль: куратор"}
+      </p>
+      <p className="mt-2 text-[#888085] leading-relaxed">
+        {role === "ANALYTIC"
+          ? "Вы увидите все кейсы, когда они появятся. Создание кейсов недоступно."
+          : "Вы увидите все кейсы, когда они появятся. Создание кейсов доступно клиентам."}
+      </p>
     </div>
   );
 }
