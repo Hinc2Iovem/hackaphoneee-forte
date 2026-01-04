@@ -19,12 +19,12 @@ export type AuthTokens = {
 };
 
 export const axiosAuth = axios.create({
-  baseURL: `/api`,
+  baseURL: `https://api-talap.kcmg.kz/api`,
   withCredentials: true,
 });
 
 export const axiosCustomized = axios.create({
-  baseURL: `/api`,
+  baseURL: `https://api-talap.kcmg.kz/api`,
   withCredentials: true,
 });
 

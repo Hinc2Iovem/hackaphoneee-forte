@@ -11,15 +11,15 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  server: {
-    proxy: {
-      "/api": {
-        target: "https://api-talap.kcmg.kz",
-        changeOrigin: true,
-      },
-    },
-    // allowedHosts: ["apogeal-junie-unhomogeneous.ngrok-free.dev"],
-  },
+  // server: {
+  //   proxy: {
+  //     "/api": {
+  //       target: "https://api-talap.kcmg.kz",
+  //       changeOrigin: true,
+  //     },
+  //   },
+  //   // allowedHosts: ["apogeal-junie-unhomogeneous.ngrok-free.dev"],
+  // },
 });
 
 // server: {
